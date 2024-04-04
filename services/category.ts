@@ -56,7 +56,7 @@ export async function addCategory(formData: FormData) {
 
     return json;
   } catch (error) {
-    return error;
+    throw new Error('something went wrong');
   }
 }
 

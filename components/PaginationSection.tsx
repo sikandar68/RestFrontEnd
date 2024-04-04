@@ -48,9 +48,18 @@ export function PaginationSection({
       const renderedPages = activePages.map((page, idx) => (
         <PaginationItem
           key={idx}
-          className={currentPage === page ? 'rounded-md bg-primary' : ''}
+          className={
+            currentPage === page
+              ? 'rounded-full bg-primary'
+              : 'rounded-full'
+          }
         >
-          <PaginationLink onClick={() => setCurrentPage(page)}>
+          <PaginationLink
+            className={`rounded-full h-6 w-6 ${
+              currentPage === page ? '' : 'hover:bg-primary'
+            }`}
+            onClick={() => setCurrentPage(page)}
+          >
             {page}
           </PaginationLink>
         </PaginationItem>
@@ -82,17 +91,17 @@ export function PaginationSection({
     };
   
     return (
-      <div>
+      <div dir='ltr'>
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious onClick={handlePrevPage} />
+              <PaginationPrevious className='w-6 h-6 rounded-full' onClick={handlePrevPage} />
             </PaginationItem>
   
             {renderPages()}
   
             <PaginationItem>
-              <PaginationNext onClick={handleNextPage} />
+              <PaginationNext className='w-6 h-6 rounded-full' onClick={handleNextPage} />
             </PaginationItem>
           </PaginationContent>
         </Pagination>

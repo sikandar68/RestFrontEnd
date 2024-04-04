@@ -42,17 +42,22 @@ const Categories = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [nameSearch, setNameSearch] = useState('');
   const [descriptionSearch, setDescriptionSearch] = useState('');
+  const [tempNameSearch, setTempNameSearch] = useState('');
+  const [tempDescriptionSearch, setTempDescriptionSearch] = useState('');
   const [sortBy, setSortBy] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('asc');
   const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<string>('');
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isFilterModalOpen, setFilterModalOpen] = useState(false);
+
 
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
   const { mutate: addOrEditRecord, isPending } = useMutation({
     mutationFn: async () => {
+      debugger;
       const formData = new FormData();
       if (id !== '') {
         formData.append('Id', id);
@@ -67,7 +72,10 @@ const Categories = () => {
       return result;
     },
     onError: (error) => {
-      console.log('Error', error.message);
+      toast({
+        title: `${t.error}`,
+        description: `${t.somethingWentWrong}`,
+      });
     },
     onSuccess: (data) => {
       clear();
@@ -118,7 +126,7 @@ const Categories = () => {
       setModalOpen(true);
     },
   });
-  const { data: categoryData, isLoading } = useQuery({
+  const { data: categoryData, isPending : fetchPending } = useQuery({
     queryKey: [
       'categories',
       page,
@@ -153,14 +161,20 @@ const Categories = () => {
   const onSearchChange = (value?: string, columnName?: string) => {
     switch (columnName) {
       case 'name':
-        setNameSearch(value ?? '');
+        setTempNameSearch(value ?? '');
         break;
       case 'description':
-        setDescriptionSearch(value ?? '');
+        setTempDescriptionSearch(value ?? '');
         break;
       default:
         break;
     }
+    setPage(1);
+  };
+  const applyFilters = () => {
+    setNameSearch(tempNameSearch);
+    setDescriptionSearch(tempDescriptionSearch);
+    setFilterModalOpen(false);
     setPage(1);
   };
   const handleSort = (columnName: string) => {
@@ -182,9 +196,9 @@ const Categories = () => {
   };
 
   const renderTableBody = () => {
-    if (isLoading) {
+    if (fetchPending) {
       return (
-        <TableRow>
+        <TableRow className="bg-primary">
           <TableCell colSpan={3}>
             <div className='flex justify-center'>
               <Loader2 className='mr-2 h-10 w-10 animate-spin' />
@@ -206,7 +220,7 @@ const Categories = () => {
 
     // Render table rows when data is available
     return categoryData?.clientPreferences?.map((item: Category) => (
-      <TableRow className='rounded-2xl' key={item.id}>
+      <TableRow className='rounded-3xl' key={item.id}>
         <TableCell>
           {locale === 'ar' ? item.localizedName : item.name}
         </TableCell>
@@ -243,24 +257,17 @@ const Categories = () => {
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
             /> */}
-            <div className='flex gap-3'>
-              <Button onClick={() => setModalOpen(true)} color='primary'>
-                {t.addNew}
-              </Button>
+            <div className='flex w-full items-center justify-between border-b-2 py-2'>
+              <div>
+                <div className='text-primary-content text-xl'>{t.categories}</div>
+              </div>
             </div>
           </div>
-          <div className='flex items-center justify-between'>
-            <span className='text-default-400 text-small'>
-              {t.total +
-                ' ' +
-                (categoryData?.totalRecords ?? 0) +
-                ' ' +
-                t.records}
-            </span>
+          <div className='mt-2 flex items-center justify-between'>
             <label className='text-default-400 text-small flex items-center'>
-              {t.recordsPerPage}
+              <span className='mx-2'>{t.show}</span>
               <select
-                className='text-default-400 text-small bg-transparent outline-none'
+                className='text-default-400 text-small bg-light outline-none'
                 onChange={(e) => {
                   setRowsPerPage(parseInt(e.target.value, 10));
                   setPage(1);
@@ -270,7 +277,25 @@ const Categories = () => {
                 <option value='10'>10</option>
                 <option value='15'>15</option>
               </select>
+              <span className='mx-2'>{t.entries}</span>
             </label>
+            <div className='flex gap-3'>
+              <Button onClick={() => setModalOpen(true)} color='primary'>
+                {t.addNew}
+              </Button>
+              <Button onClick={() => setFilterModalOpen(true)} color='primary'>
+                {t.applyFilters}
+              </Button>
+              <Button
+                onClick={() => {
+                  setNameSearch('');
+                  setDescriptionSearch('');
+                }}
+                color='primary'
+              >
+                {t.clearFilters}
+              </Button>
+            </div>
           </div>
           <Table>
             <TableHeader>
@@ -291,15 +316,6 @@ const Categories = () => {
                       </span>
                     )}
                   </div>
-                  <Input
-                    type='text'
-                    placeholder={t.search}
-                    value={nameSearch}
-                    onChange={(e) => onSearchChange(e.target.value, 'name')}
-                    className={`search-box w-[50%] ${
-                      sortBy !== 'name' && 'hidden'
-                    }`}
-                  />
                 </TableHead>
                 <TableHead>
                   <div
@@ -317,48 +333,50 @@ const Categories = () => {
                       </span>
                     )}
                   </div>
-                  <Input
-                    type='text'
-                    placeholder={t.search}
-                    value={descriptionSearch}
-                    onChange={(e) =>
-                      onSearchChange(e.target.value, 'description')
-                    }
-                    className={`w-[50%] ${
-                      sortBy !== 'description' && 'hidden'
-                    }`}
-                  />
                 </TableHead>
                 <TableHead>{t.action}</TableHead>
-                </TableHeadRow>
+              </TableHeadRow>
             </TableHeader>
             <TableBody>{renderTableBody()}</TableBody>
             {categoryData?.totalRecords > 0 && (
               <TableFooter>
-                  <TableCell colSpan={3}>
-                    <PaginationSection
-                      totalPosts={categoryData?.totalRecords}
-                      postsPerPage={rowsPerPage}
-                      currentPage={page}
-                      setCurrentPage={setPage}
-                    />
-                  </TableCell>
+                <TableCell className='flex justify-start'>
+                  <PaginationSection
+                    totalPosts={categoryData?.totalRecords}
+                    postsPerPage={rowsPerPage}
+                    currentPage={page}
+                    setCurrentPage={setPage}
+                  />
+                </TableCell>
+                <TableCell></TableCell>
+                <TableCell className=''>
+                  <span className='text-default-400 text-small'>
+                    {'Page ' +
+                      page +
+                      ' of ' +
+                      (categoryData?.totalRecords ?? 0) / rowsPerPage +
+                      ' '}
+                  </span>
+                </TableCell>
               </TableFooter>
             )}
           </Table>
           {/* Add Or Update Modal */}
           {isModalOpen && (
             <div className='fixed inset-0 flex items-center justify-center overflow-y-auto overflow-x-hidden'>
-              <div className='relative max-h-full w-full max-w-md p-4'>
+              <div className='relative border shadow-lg border-light max-h-full w-full max-w-md'>
                 <div className='relative rounded-lg bg-background'>
                   <div className='flex items-center justify-between rounded-t border-b p-4 md:p-5 dark:border-gray-600'>
                     <h3 className='text-xl font-semibold text-secondary-foreground'>
-                      Add Or Update Record
+                      {t.addOrUpdateRecord}
                     </h3>
                     <button
                       type='button'
                       className='end-2.5 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white'
-                      onClick={() => {setModalOpen(false); clear();}}
+                      onClick={() => {
+                        setModalOpen(false);
+                        clear();
+                      }}
                     >
                       <svg
                         className='h-3 w-3'
@@ -388,7 +406,7 @@ const Categories = () => {
                     >
                       {' '}
                       <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                        Name
+                        {t.name}
                       </label>
                       <Input
                         type='text'
@@ -396,11 +414,11 @@ const Categories = () => {
                         id='name'
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder='name'
+                        placeholder={t.name}
                         required
                       />
                       <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                        Localized Name
+                        {t.localizedName}
                       </label>
                       <Input
                         type='text'
@@ -408,21 +426,21 @@ const Categories = () => {
                         id='localizedName'
                         value={localizedName}
                         onChange={(e) => setLocalizedName(e.target.value)}
-                        placeholder='Localized Name'
+                        placeholder={t.localizedName}
                         required
                       />
                       <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                        Description
+                        {t.description}
                       </label>
                       <Input
                         type='text'
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder='description'
+                        placeholder={t.description}
                         required
                       />
                       <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                        Upload Image
+                        {t.uploadImage}
                       </label>
                       <Input
                         type='file'
@@ -434,9 +452,87 @@ const Categories = () => {
                         type='submit'
                         isLoading={isPending}
                         disabled={isPending}
+                        className='w-full rounded-lg bg-primary px-5 py-2.5 text-center text-sm font-medium text-bg-primary-foreground hover:bg-opacity-80'
+                      >
+                        {t.submit}
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Filter Modal */}
+          {isFilterModalOpen && (
+            <div className='fixed inset-0 flex items-center justify-center overflow-y-auto overflow-x-hidden'>
+              <div className='relative border border-gray-500 max-h-full w-full max-w-md'>
+                <div className='relative  rounded-lg bg-background'>
+                  <div className='flex items-center justify-between rounded-t border-b p-4 md:p-5 dark:border-gray-600'>
+                    <h3 className='text-xl font-semibold text-secondary-foreground'>
+                      {t.applyFilters}
+                    </h3>
+                    <button
+                      type='button'
+                      className='end-2.5 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white'
+                      onClick={() => {
+                        setFilterModalOpen(false);
+                        clear();
+                      }}
+                    >
+                      <svg
+                        className='h-3 w-3'
+                        aria-hidden='true'
+                        xmlns='http://www.w3.org/2000/svg'
+                        fill='none'
+                        viewBox='0 0 14 14'
+                      >
+                        <path
+                          stroke='currentColor'
+                          stroke-linecap='round'
+                          stroke-linejoin='round'
+                          stroke-width='2'
+                          d='m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6'
+                        />
+                      </svg>
+                      <span className='sr-only'>Close modal</span>
+                    </button>
+                  </div>
+                  <div className='p-4 md:p-5'>
+                    <form
+                      className='space-y-4'
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        applyFilters();
+                      }}
+                    >
+                      {' '}
+                      <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
+                        {t.name}
+                      </label>
+                      <Input
+                        type='text'
+                        placeholder={t.search}
+                        value={tempNameSearch}
+                        onChange={(e) => onSearchChange(e.target.value, 'name')}
+                      />
+                      <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
+                        {t.description}
+                      </label>
+                      <Input
+                        type='text'
+                        placeholder={t.search}
+                        value={tempDescriptionSearch}
+                        onChange={(e) =>
+                          onSearchChange(e.target.value, 'description')
+                        }
+                      />
+                      <Button
+                        type='submit'
+                        isLoading={fetchPending}
+                        disabled={fetchPending}
                         className='w-full rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
                       >
-                        Submit
+                        {t.applyFilters}
                       </Button>
                     </form>
                   </div>

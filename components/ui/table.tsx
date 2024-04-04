@@ -58,10 +58,11 @@ const TableRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'rounded-2xl data-[state=selected]:bg-muted',
+      'rounded-3xl data-[state=selected]:bg-muted',
       className
     )}
     {...props}
+    style={{ backgroundColor: `hsl(var(--light))`, border: '10px solid hsl(var(--tableborder))' }}
   />
 ));
 TableRow.displayName = 'TableRow';
@@ -72,7 +73,7 @@ const TableHeadRow = React.forwardRef<
   <tr
     ref={ref}
     className={cn(
-      'data-[state=selected]:bg-muted',
+      '',
       className
     )}
     {...props}
@@ -100,7 +101,7 @@ const TableCell = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}
+    className={cn('px-4 align-middle [&:has([role=checkbox])]:pr-0', className)}
     {...props}
   />
 ));

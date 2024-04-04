@@ -15,6 +15,7 @@ export type Collection = {
   subCategoryName: string;
   description: string;
   pic: string;
+  isActive: boolean;
 };
 export type Category = {
   id: number;
@@ -22,6 +23,7 @@ export type Category = {
   localizedName: string;
   description: string;
   pic: string;
+  isActive: boolean;
 };
 export type SubCategory = {
   id: number;
