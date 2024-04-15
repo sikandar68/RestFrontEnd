@@ -1,3 +1,5 @@
+import { FC } from "react";
+
 export type Tenants = {
   id: string;
   name: string;
@@ -108,4 +110,12 @@ export type Table = {
   id: string;
   name: string;
   floorId: number;
+};
+export type SideNavItem = {
+  id: number;
+  title: string;
+  path: string;
+  icon?: FC;
+  submenu?: boolean;
+  subMenuItems?: SideNavItem[];
 };

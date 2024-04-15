@@ -81,7 +81,7 @@ const Login = () => {
   //     console.error('Fetch error:', error);
   //   }
   // };
-  function setUserCookies(
+ function setUserCookies(
     //twoFAEnabled: boolean,
     token: string,
     //guid: string,

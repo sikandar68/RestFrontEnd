@@ -8,3 +8,14 @@ export interface User {
   accessToken?: string;
   permissions?: string;
 }
+
+export interface MenuItems {
+  itemId: number;
+  name: string;
+  localizedName: string;
+  href: string;
+  permission?: string;
+  parentId?: number;
+  subItems?: MenuItems[];
+  icon : string;
+}

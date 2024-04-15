@@ -43,6 +43,9 @@
     --light: 0, 0%, 94%;
     --light-foreground: 0, 0%, 0%;
     
+    --dark: 0, 0%, 100%;
+    --dark-foreground: 0, 0%, 0%;
+
     --border: 0 0% 89.8%;
     --tableborder: 0, 0%, 100%;
     --input: 0 0% 89.8%;
@@ -90,6 +93,9 @@
 
     --light: 215, 28%, 17%;
     --light-foreground: 0, 0%, 0%;
+
+    --dark: 0, 0%, 0%;
+    --dark-foreground: 0, 0%, 100%;
 
     --border: 0 0% 14.9%;
     --tableborder: 0 0% 3.9%;

@@ -36,7 +36,7 @@ export const getUsers = async (page: number, rowsPerPage: number, nameSearch: st
 
 // single user
 export const getUser = async (id: string) => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}api/Restaurant/GetById?id=${id}`);
+    const response = await fetch(`${API_CONFIG.BASE_URL}api/User/${id}`);
     const json = await response.json();
 
     if (json) return json;

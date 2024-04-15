@@ -19,6 +19,7 @@ export default {
   continue : "Continue",
   confirmationTitle : "Confirmation",
   confirmationDelete : "Do you want to delete this record ?",
+  confirmationLogin : "Do you want to login from this user ?",
   mainMenu : "Main Menu",
   categories : "Categories",
   subCategories: "Sub Categories",

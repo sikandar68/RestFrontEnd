@@ -1,7 +1,6 @@
 import React, { ChangeEvent, Fragment, useEffect, useState } from 'react';
 //import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
-import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
 import en from '@/locales/en';
 import ar from '@/locales/ar';
@@ -14,6 +13,7 @@ import Link from 'next/link';
 import { AlignJustify, X } from 'lucide-react';
 import Jwt from 'jsonwebtoken';
 import Image  from 'next/image';
+import nookies, { parseCookies, destroyCookie } from 'nookies';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -37,10 +37,83 @@ const NavBar: React.FC = () => {
   const [isUserProfileOpen, setUserProfileOpen] = useState(false);
   const [openDropdownMenu, setOpenDropdownMenu] = useState<string | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [logo, setLogo] = useState('');
   const [userImage, setUserImage] = useState('');
   const [email, setEmail] = useState('');
+  const [saId, setSaId] = useState('');
 
+  const handleLogin = async () => {
+    if (window.confirm('Are you sure to Loing from this user !') === true) {
+      try {
+        const token = cookies.token || '';
+        const jsonToken = Jwt.decode(token) as { [key: string]: string }; // Decoding the JWT token
+        const userId =
+          jsonToken[
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
+          ];
+        const fetchResponse = await fetch(
+          `https://localhost:7160/api/Auth/AuthenticateById?id=${saId}&saId=${userId}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+          if (!fetchResponse.ok) {
+              throw new Error(`Request failed with status: ${fetchResponse.status}`);
+          }
+
+          const resp = await fetchResponse.json();
+          const respToken = resp.response.token || '';
+
+          const json = Jwt.decode(respToken) as { [key: string]: string };
+          console.log(json);
+          setUserCookies(resp.response.token, json['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '', json['saId'] || '', false, resp.response.clientPreferences);
+          window.location.href = '/';
+      } catch (error) {
+          console.error('Fetch error:');
+      }
+  }
+  };
+  function setUserCookies(
+    //twoFAEnabled: boolean,
+    token: string,
+    //guid: string,
+    username: string,
+    saId : string, 
+    //onboarding: string,
+    rememberMe: boolean = true,
+    clientPreference : ClientPreference
+  ) {
+    // Set the cookie with an explicit expiration time (e.g., 30 days)
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 30);
+
+    const DAYS_IN_SECONDS = 30 * 24 * 60 * 60;
+
+    const expiration = rememberMe
+      ? {
+        maxAge: DAYS_IN_SECONDS, // Cookie will expire in 30 days (in seconds)
+        expires: expirationDate, // Sets the explicit expiration date
+        path: '/', // Cookie will be accessible from all paths
+        secure: true,
+        httpOnly: false,
+      }
+      : {
+        path: '/', // Cookie will be accessible from all paths
+        secure: true,
+        httpOnly: false,
+      };
+
+    nookies.set(undefined, 'token', token, expiration);
+    //nookies.set(undefined, "guid", guid, expiration);
+    nookies.set(undefined, 'username', username, expiration);
+    nookies.set(undefined, 'saId', saId, expiration);
+    //nookies.set(undefined, "onboarding", onboarding, expiration);
+    nookies.set(undefined, 'rememberMe', rememberMe + '', expiration);
+    const clientPreferenceString = JSON.stringify(clientPreference);
+
+    nookies.set(undefined, 'clientPreference', clientPreferenceString, expiration);
+  }
   const handleToggleUserMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     setUserProfileOpen(!isUserProfileOpen);
@@ -75,11 +148,6 @@ const NavBar: React.FC = () => {
         console.error(error);
       });
   };
-  const getLogo = () => {
-    const clientPreferenceString = cookies.clientPreference || '{}';
-    const clientPreference: ClientPreference = JSON.parse(clientPreferenceString);
-    setLogo(clientPreference.logo);
-  };
   const getUserImage = () => {
     const token = cookies.token || '';
     const json = Jwt.decode(token) as { userImage: string };
@@ -107,17 +175,18 @@ console.log(nestedMenuItems);
 
   useEffect(() => {
     const userEmail = cookies.username;
+    const saId = cookies.saId;
     getData(userEmail);
-    getLogo();
     getUserImage();
     setEmail(userEmail);
+    setSaId(saId);
     document.addEventListener('click', handleDocumentClick);
     return () => {
       document.removeEventListener('click', handleDocumentClick);
     };
   }, []);
   return (
-    <div className='w-full bg-gray-800'>
+    <div className='w-full bg-light'>
       <div className='mx-auto px-2 sm:px-6 lg:px-8'>
         <div className='relative flex h-16 items-center justify-between'>
           <div className='absolute inset-y-0 flex items-center sm:hidden'>
@@ -133,23 +202,8 @@ console.log(nestedMenuItems);
               )}
             </button>
           </div>
-          <div className='flex flex-shrink-0 items-center'>
-          {logo ? (
-              <img
-              className='hidden h-8 w-auto md:block lg:block'
-              src={logo}
-              alt='Logo'
-            />
-            ):(
-              <img
-              className='hidden h-8 w-auto md:block lg:block'
-              src='defaultLogo.png'
-              alt='Logo'
-            />
-            )}
-          </div>
 
-          <div className='hidden sm:ml-6 sm:flex sm:items-center'>
+          {/* <div className='hidden sm:ml-6 sm:flex sm:items-center'>
             {nestedMenuItems.map((menuItem) => (
               <div key={menuItem.name} className='relative ml-3'>
                 {menuItem.subItems ? (
@@ -192,7 +246,7 @@ console.log(nestedMenuItems);
                 )}
               </div>
             ))}
-          </div>
+          </div> */}
           <div className='flex flex-row gap-2 relative ml-3'>
             <Select
               value={locale}
@@ -265,6 +319,14 @@ console.log(nestedMenuItems);
                       >
                         {t.settings}
                       </a>
+                      {saId && saId !== '' && (
+                      <a
+                        onClick={handleLogin}
+                        className='block px-4 py-2 text-sm text-gray-700'
+                      >
+                        Impersonate
+                      </a>
+                      )}
                       <a
                         href='/logout'
                         className='block px-4 py-2 text-sm text-gray-700'

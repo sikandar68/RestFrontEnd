@@ -27,6 +27,7 @@ import { useRouter } from 'next/router';
 import { Search, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import ConfirmationDialog from '@/components/alerts/ConfirmationDialog';
 import { PaginationSection } from '@/components/PaginationSection';
+import Layout from '@/components/Layout';
 
 const Categories = () => {
   const router = useRouter();
@@ -57,7 +58,6 @@ const Categories = () => {
   const queryClient = useQueryClient();
   const { mutate: addOrEditRecord, isPending } = useMutation({
     mutationFn: async () => {
-      debugger;
       const formData = new FormData();
       if (id !== '') {
         formData.append('Id', id);
@@ -247,8 +247,9 @@ const Categories = () => {
   };
   return (
     <>
+      <Layout>
       <NavBar />
-      <section className='my-2 flex items-center justify-center'>
+      <section className=' flex items-center justify-center'>
         <div className='container'>
           <div className='flex items-end justify-between gap-3'>
             {/* <Input
@@ -551,6 +552,7 @@ const Categories = () => {
           />
         </div>
       </section>
+      </Layout>
     </>
   );
 };

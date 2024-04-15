@@ -21,6 +21,7 @@ export default {
   continue : "جاری رکھیں",
   confirmationTitle : "کنفرمیشن",
   confirmationDelete : "کیا آپ یہ ریکارڈ ڈیلیٹ کرنا چاہتے ہیں ؟",
+  confirmationLogin : "هل تريد تسجيل الدخول من هذا المستخدم؟",
   mainMenu : "مین مینیو",
   categories : "کیٹگریز",
   subCategories : "سب کیٹگریز",
