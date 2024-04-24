@@ -10,10 +10,11 @@ import { Context } from '@/contexts/UseContext';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '../ui/select';
 import { ClientPreference } from '@/types/types';
 import Link from 'next/link';
-import { AlignJustify, X } from 'lucide-react';
+import { AlignJustify, Moon, Sun, X } from 'lucide-react';
 import Jwt from 'jsonwebtoken';
 import Image  from 'next/image';
 import nookies, { parseCookies, destroyCookie } from 'nookies';
+import ToggleSwitch from '../elements/toggleSwitch';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
@@ -154,23 +155,6 @@ const NavBar: React.FC = () => {
     const userImage = json['userImage'];
     setUserImage(userImage);
   };
-  const nestedMenuItems = buildMenuTree(menuItems);
-console.log(nestedMenuItems);
-  function buildMenuTree(menuItems: MenuItem[], parentId = 0): MenuItem[] {
-    const menuTree: MenuItem[] = [];
-
-    menuItems
-      .filter((item) => item.parentId === parentId)
-      .forEach((item) => {
-        const subItems = buildMenuTree(menuItems, item.itemId);
-        if (subItems.length > 0) {
-          item.subItems = subItems;
-        }
-        menuTree.push(item);
-      });
-
-    return menuTree;
-  }
   const cookies = parseCookies();
 
   useEffect(() => {
@@ -202,7 +186,22 @@ console.log(nestedMenuItems);
               )}
             </button>
           </div>
-
+          <div className='flex items-center justify-between'>
+          {true ? (
+              <img
+              className='hidden h-8 w-auto md:block lg:block'
+              //src={logo}
+              src='https://mavenx-test.s3.eu-north-1.amazonaws.com/default/1efb73cda2934e9b9d63fea237704b09.png'
+              alt='Logo'
+            />
+            ):(
+              <img
+              className='hidden h-8 w-auto md:block lg:block'
+              src='defaultLogo.png'
+              alt='Logo'
+            />
+            )}
+          </div>
           {/* <div className='hidden sm:ml-6 sm:flex sm:items-center'>
             {nestedMenuItems.map((menuItem) => (
               <div key={menuItem.name} className='relative ml-3'>
@@ -248,22 +247,8 @@ console.log(nestedMenuItems);
             ))}
           </div> */}
           <div className='flex flex-row gap-2 relative ml-3'>
-            <Select
-              value={locale}
-              onValueChange={(newValue) => changeLanguage(newValue)}
-            >
-              <SelectTrigger>
-                {LangDropDown.find((op) => op.value === locale)?.label}
-              </SelectTrigger>
-              <SelectContent>
-                {LangDropDown.map((op) => (
-                  <SelectItem value={op.value} key={op.value}>
-                    {op.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
+            
+            {/* <Select
               value={theme}
               onValueChange={(newValue) => {
                 changeTheme(newValue);
@@ -277,31 +262,70 @@ console.log(nestedMenuItems);
                   </SelectItem>
                 ))}
               </SelectContent>
+            </Select> */}
+          </div>
+          <div className="flex items-center justify-end max-w-[400px] w-full">
+          
+        </div>
+          <div className='sm:ml-6 sm:flex sm:items-center'>
+          <div className="hidden sm:block pr-5">
+            <div className="flex w-[120px] justify-evenly items-center">
+            <Moon className='bg-light h-5 w-5'/>
+              <ToggleSwitch
+                onChange={()=>{
+                  if(theme =='dark'){
+                    changeTheme('default');
+                  }
+                  else{
+                    changeTheme('dark');
+                  }
+                }}
+                checked={theme == 'dark'}
+                className="scale-[1.15]"
+              />
+              <Sun className='bg-light h-5 w-5'/>
+            </div>
+          </div>
+          <div className="hidden sm:block pr-5">
+          <Select
+              value={locale}
+              onValueChange={(newValue) => changeLanguage(newValue)}
+            >
+              <SelectTrigger className='rounded-full h-6'>
+                {locale}
+                {/* {LangDropDown.find((op) => op.value === locale)?.label} */}
+              </SelectTrigger>
+              <SelectContent>
+                {LangDropDown.map((op) => (
+                  <SelectItem value={op.value} key={op.value}>
+                    {op.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
-          <div className='sm:ml-6 sm:flex sm:items-center'>
             {/* Profile dropdown */}
             {email && (
-              <div className='hidden md:flex relative ml-3'>
+              <div className='hidden sm:block pr-5'>
                 <div className='relative'>
                 <button
                   type='button'
                   onClick={(event) =>
                     handleToggleDropdownMenu('StaticDropdown', event)
                   }
-                  className='flex rounded-xl bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
+                  className='flex rounded-full bg-dark text-sm'
                 >
                   <span className='sr-only'>Open Static Dropdown menu</span>
                   <img
-                    className='h-8 w-8 rounded-full'
+                    className='min-h-8 w-8 h-8 min-w-8 rounded-full'
                     src= {userImage || USER_IMAGE_URL}
                     alt='Static Dropdown'
                   />
                 </button>
                   {openDropdownMenu === 'StaticDropdown' && (
-                    <div className='absolute ltr:right-0 rtl:left-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
+                    <div className='absolute ltr:right-0 rtl:left-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-light py-1 shadow-lg shadow-dark border border-dark'>
                       <div
-                        className='text-md block px-4 py-2 text-sm font-bold text-gray-700'
+                        className='text-md hover:bg-dark block px-4 py-2 text-sm font-bold'
                         role='menuitem'
                         id='user-menu-item-0'
                       >
@@ -309,27 +333,27 @@ console.log(nestedMenuItems);
                       </div>
                       <a
                         href='/static-item-1'
-                        className='block px-4 py-2 text-sm text-gray-700'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
                       >
                         {t.yourProfile}
                       </a>
                       <a
                         href='/static-item-2'
-                        className='block px-4 py-2 text-sm text-gray-700'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
                       >
                         {t.settings}
                       </a>
                       {saId && saId !== '' && (
                       <a
                         onClick={handleLogin}
-                        className='block px-4 py-2 text-sm text-gray-700'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
                       >
                         Impersonate
                       </a>
                       )}
                       <a
                         href='/logout'
-                        className='block px-4 py-2 text-sm text-gray-700'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
                       >
                         {t.signOut}
                       </a>
@@ -341,52 +365,67 @@ console.log(nestedMenuItems);
           </div>
         </div>
       </div>
-
       {isMenuOpen && (
         <div className='sm:hidden' onClick={() => setMenuOpen(true)}>
           <div className='space-y-1 px-2 pb-3 pt-2'>
-            {nestedMenuItems.map((menuItem) => (
-              <div key={menuItem.name} className='relative ml-3'>
-                {menuItem.subItems ? (
-                  <div className='relative'>
-                    <button
-                      type='button'
-                      onClick={(event) =>
-                        handleToggleDropdownMenu(menuItem.name, event)
-                      }
-                      className='flex rounded-xl bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'
-                    >
-                      <span className='sr-only'>{`Open ${menuItem.name} menu`}</span>
-                      <span className='rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white'>
-                        {menuItem.name}
-                      </span>
-                    </button>
-                    {openDropdownMenu === menuItem.name && (
-                      <div className='absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
-                        {menuItem.subItems.map((subItem) => (
-                          <a
-                            key={subItem.name}
-                            href={subItem.href}
-                            className='block px-4 py-2 text-sm text-gray-700'
-                          >
-                            {subItem.name}
-                          </a>
-                        ))}
+            {/* Profile dropdown */}
+            {email && (
+              <div className='flex relative ml-3'>
+                <div className='relative'>
+                <button
+                  type='button'
+                  onClick={(event) =>
+                    handleToggleDropdownMenu('StaticDropdown', event)
+                  }
+                  className='flex rounded-full bg-dark text-sm'
+                >
+                  <span className='sr-only'>Open Static Dropdown menu</span>
+                  <img
+                    className='h-8 w-8 rounded-full'
+                    src= {userImage || USER_IMAGE_URL}
+                    alt='Static Dropdown'
+                  />
+                </button>
+                  {openDropdownMenu === 'StaticDropdown' && (
+                    <div className='absolute z-10 mt-2 w-48 origin-top-right rounded-md bg-light py-1 shadow-lg shadow-dark border border-dark'>
+                      <div
+                        className='text-md hover:bg-dark block px-4 py-2 text-sm font-bold'
+                        role='menuitem'
+                        id='user-menu-item-0'
+                      >
+                        {email}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <a
-                    href={menuItem.href}
-                    className={classNames(
-                      'rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white'
-                    )}
-                  >
-                    {menuItem.name}
-                  </a>
-                )}
+                      <a
+                        href='/static-item-1'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
+                      >
+                        {t.yourProfile}
+                      </a>
+                      <a
+                        href='/static-item-2'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
+                      >
+                        {t.settings}
+                      </a>
+                      {saId && saId !== '' && (
+                      <a
+                        onClick={handleLogin}
+                        className='block hover:bg-dark px-4 py-2 text-sm'
+                      >
+                        Impersonate
+                      </a>
+                      )}
+                      <a
+                        href='/logout'
+                        className='block hover:bg-dark px-4 py-2 text-sm'
+                      >
+                        {t.signOut}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

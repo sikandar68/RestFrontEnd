@@ -9,12 +9,10 @@ import { parseCookies } from 'nookies';
 import { MenuItems } from '../types/interfaces';
 import { ClientPreference } from '@/types/types';
 import { MenuItem } from './MenuItem';
-import Link from 'next/link';
 
 
 const Sidebar: FC = () => {
   const [toggleCollapse, setToggleCollapse] = useState(false);
-  const [isCollapsible, setIsCollapsible] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItems[]>([]);
   const [logo, setLogo] = useState('');
 
@@ -55,49 +53,20 @@ const Sidebar: FC = () => {
     getData(userEmail);
     getLogo();
   }, []);
-
-  function buildSubMenuItems(
-    items: MenuItems[],
-    parentId: number
-  ): MenuItems[] {
-    const subMenuItems: MenuItems[] = items
-      .filter((item) => item.parentId === parentId)
-
-    // Recursively build submenus for each submenu item
-    subMenuItems.forEach((item) => {
-      item.subItems = buildSubMenuItems(items, item.itemId);
-    });
-
-    return subMenuItems;
-  }
-
-  // Start building the side nav items
-  const SIDENAV_ITEMS: MenuItems[] = menuItems
-    .filter((item) => item.parentId === 0)
-    .map((item) => ({
-      ...item,
-      submenu: true,
-      subItems: buildSubMenuItems(menuItems, item.itemId),
-    }));
   const wrapperClasses = classNames(
-    'h-screen overflow-auto px-4 pt-8 pb-4 bg-light flex justify-between flex-col shadow-lg',
+    'h-screen overflow-auto px-2 pt-8 pb-4 bg-light flex justify-between flex-col shadow-lg',
     {
-      ['w-56']: !toggleCollapse,
-      ['w-20']: toggleCollapse,
+      ['w-56 min-w-56']: !toggleCollapse,
+      ['w-16 min-w-16']: toggleCollapse,
     }
   );
 
   const collapseIconClasses = classNames(
-    'p-4 rounded bg-light absolute right-0',
+    'p-4 rounded bg-light absolute ltr:right-0 rtl:left-0',
     {
       'rotate-180': toggleCollapse,
     }
   );
-
-
-  const onMouseOver = () => {
-    setIsCollapsible(!isCollapsible);
-  };
 
   const handleSidebarToggle = () => {
     setToggleCollapse(!toggleCollapse);
@@ -106,17 +75,16 @@ const Sidebar: FC = () => {
   return (
     <div
       className={wrapperClasses}
-      onMouseEnter={onMouseOver}
-      onMouseLeave={onMouseOver}
       style={{ transition: 'width 400ms cubic-bezier(0.2, 0, 0, 1) 0s' }}
     >
       <div className='flex flex-col'>
         <div className='relative flex items-center justify-between'>
-          <div className='flex items-center justify-between'>
+          {/* <div className='flex items-center justify-between'>
           {logo ? (
               <img
               className='hidden h-8 w-auto md:block lg:block'
-              src={logo}
+              //src={logo}
+              src='https://mavenx-test.s3.eu-north-1.amazonaws.com/default/1efb73cda2934e9b9d63fea237704b09.png'
               alt='Logo'
             />
             ):(
@@ -126,26 +94,24 @@ const Sidebar: FC = () => {
               alt='Logo'
             />
             )}
-          </div>
-          {isCollapsible && (
-            <button
+          </div> */}
+          <button
               className={collapseIconClasses}
               onClick={handleSidebarToggle}
             >
               <CollapsIcon />
             </button>
-          )}
         </div>
 
         <div className='mt-24 flex flex-col items-start'>
-          {SIDENAV_ITEMS.map((item, idx) => {
+          {menuItems.map((item, idx) => {
             return (
               <MenuItem key={idx} item={item} toggleCollapse={toggleCollapse} />
             );
           })}
         </div>
       </div>
-      <a
+      {/* <a
             href='/logout'
             className='flex flex-row items-center gap-4 rounded-lg p-2 hover:bg-dark'
           >
@@ -157,7 +123,7 @@ const Sidebar: FC = () => {
                 Logout
               </span>
             )}
-          </a>
+          </a> */}
     </div>
   );
 };

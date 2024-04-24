@@ -57,4 +57,12 @@ export default {
   submit: "Submit",
   error: "Error",
   somethingWentWrong: "Something Went Wrong",
+  tenant: "Tenanat",
+  email: "Email",
+  password: "Password",
+  confirmPassword: "Confirm Password",
+  tenantLogo: "Tenanat Logo",
+  userImage : "User Image",
+  phone : "Phone",
+  avtar: "Avtar",
 };

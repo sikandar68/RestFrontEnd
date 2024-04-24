@@ -1,9 +1,11 @@
 import { MenuItems } from "@/types/interfaces";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Dot } from "lucide-react";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import Link from 'next/link';
 import classNames from 'classnames';
+import en from "@/locales/en";
+import ar from "@/locales/ar";
 
 export const MenuItem = ({
     item,
@@ -12,11 +14,14 @@ export const MenuItem = ({
     item: MenuItems;
     toggleCollapse: boolean;
   }) => {
+    const router = useRouter();
+    const { locale } = router;
+    const t = locale === 'en' ? en : ar;
+
     const [subMenuOpen, setSubMenuOpen] = useState(false);
     const toggleSubMenu = () => {
       setSubMenuOpen(!subMenuOpen);
     };
-    const router = useRouter();
     return (
       <div className='w-full'>
         {item.subItems && item.subItems.length > 0 ? (
@@ -36,7 +41,7 @@ export const MenuItem = ({
   
                 {!toggleCollapse && (
                   <span className='flex text-md'>
-                    {item.name}
+                    {locale === 'ar' ? item.localizedName : item.name}
                   </span>
                 )}
               </div>
@@ -48,13 +53,13 @@ export const MenuItem = ({
             </button>
   
             {!toggleCollapse && subMenuOpen && (
-              <div className=' ml-12 flex flex-col'>
+              <div className=' ml-6 flex flex-col'>
                 {item.subItems?.map((subItem, idx) => {
                   return (
                     <Link
                       key={idx}
                       href={subItem.href}
-                      className={`${
+                      className={` ${
                         subItem.href === router.pathname ? 'font-bold bg-dark' :
                         'hover:bg-dark'
                       }`}
@@ -62,10 +67,12 @@ export const MenuItem = ({
                       {!toggleCollapse && (
                         <span
                           className={classNames(
-                            'text-sm p-2'
+                            'text-sm p-2 flex flex-row'
                           )}
                         >
-                          {subItem.name}
+                          <Dot />
+                          {locale === 'ar' ? subItem.localizedName : subItem.name}
+
                         </span>
                       )}
                     </Link>
@@ -88,7 +95,8 @@ export const MenuItem = ({
                 />
             {!toggleCollapse && (
               <span className={classNames('text-md')}>
-                {item.name}
+                {locale === 'ar' ? item.localizedName : item.name}
+
               </span>
             )}
           </Link>

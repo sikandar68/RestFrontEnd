@@ -1,8 +1,10 @@
 import { FC } from "react";
 
-export type Tenants = {
+export type Tenant = {
   id: string;
   name: string;
+  localizedName: string;
+  isActive : boolean;
 };
 export type Roles = {
   id: string;

@@ -45,8 +45,8 @@ export default function Home() {
   
   return (
     <>
-          <Layout>
       <NavBar />
+      <Layout>
       <section className=' flex items-center justify-center'>
         <div>
           <h1 className='text-shadow px-8 text-center text-5xl font-bold text-white'>

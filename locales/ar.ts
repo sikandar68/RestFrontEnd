@@ -59,4 +59,12 @@ export default {
   submit: "يُقدِّم",
   error: "خطأ",
   somethingWentWrong: "هناك خطأ ما",
+  tenant: "مستأجر",
+  email: "بريد إلكتروني",
+  password: "كلمة المرور",
+  confirmPassword: "تأكيد كلمة المرور",
+  tenantLogo: "شعار المستأجر",
+  userImage : "صورة المستخدم",
+  phone : "هاتف",
+  avtar: "أفتار",
 };

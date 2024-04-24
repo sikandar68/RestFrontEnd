@@ -1,13 +1,40 @@
 import { API_CONFIG } from '@/constants/api-config';
 
 // all tenants
-export const getTenants = async (page: number, rowsPerPage: number, nameSearch : String) => {
-    const response = await fetch(`${API_CONFIG.BASE_URL}api/Restaurant?page=${page}&pageSize=${rowsPerPage}&search=${nameSearch}`);
+// export const getTenants = async (page: number, rowsPerPage: number, nameSearch : String) => {
+//     const response = await fetch(`${API_CONFIG.BASE_URL}api/Restaurant`);
+//     const json = await response.json();
+
+//     return json;
+// };
+export const getTenants = async (
+    page: number,
+    rowsPerPage: number,
+    nameSearch: string,
+    sortBy: string,
+    sortOrder: string
+  ) => {
+    const url = `${API_CONFIG.BASE_URL}api/Restaurant/GetRestaurants`;
+    const data = {
+      page: page,
+      pageSize: rowsPerPage,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+      nameSearch: nameSearch,
+    };
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    };
+  
+    const response = await fetch(url, requestOptions);
     const json = await response.json();
-
+  
     return json;
-};
-
+  };
 // single tenant
 export const getTenant = async (id: string) => {
     const response = await fetch(`${API_CONFIG.BASE_URL}api/Restaurant/GetById?id=${id}`);

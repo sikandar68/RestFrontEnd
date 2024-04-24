@@ -247,8 +247,9 @@ const Categories = () => {
   };
   return (
     <>
+    <NavBar />
       <Layout>
-      <NavBar />
+      
       <section className=' flex items-center justify-center'>
         <div className='container'>
           <div className='flex items-end justify-between gap-3'>
@@ -341,23 +342,27 @@ const Categories = () => {
             <TableBody>{renderTableBody()}</TableBody>
             {categoryData?.totalRecords > 0 && (
               <TableFooter>
-                <TableCell className='flex justify-start'>
+                <TableCell colSpan={2}>
+                  <div className='flex justify-start'>
                   <PaginationSection
                     totalPosts={categoryData?.totalRecords}
                     postsPerPage={rowsPerPage}
                     currentPage={page}
                     setCurrentPage={setPage}
                   />
+                  </div>
                 </TableCell>
-                <TableCell></TableCell>
                 <TableCell className=''>
-                  <span className='text-default-400 text-small'>
-                    {'Page ' +
-                      page +
-                      ' of ' +
-                      (categoryData?.totalRecords ?? 0) / rowsPerPage +
-                      ' '}
-                  </span>
+                <span className='text-default-400 text-small'>
+                      {'Page ' +
+                        page +
+                        ' of ' +
+                        Math.max(
+                          1,
+                          Math.ceil((categoryData?.totalRecords ?? 0) / rowsPerPage)
+                        ) +
+                        ' '}
+                    </span>
                 </TableCell>
               </TableFooter>
             )}

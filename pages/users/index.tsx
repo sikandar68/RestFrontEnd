@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addUser,
   deleteUser,
+  editUser,
   getUser,
   getUsers,
 } from '@/services/user';
@@ -43,7 +44,7 @@ const Users = () => {
   const jsonToken = Jwt.decode(token) as { [key: string]: string } | null;
   const tenantId = jsonToken ? jsonToken['tenantId'] || '' : '';
   const [id, setId] = useState('');
-  const [userName, setUserName] = useState('');
+  const [username, setUserName] = useState('');
   const [localizedName, setLocalizedName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,9 +54,14 @@ const Users = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [nameSearch, setNameSearch] = useState('');
+  const [emailSearch, setEmailSearch] = useState('');
+  const [phoneSearch, setPhoneSearch] = useState('');
+
   const [image, setImage] = useState<File | null>(null);
-  const [descriptionSearch, setDescriptionSearch] = useState('');
   const [tempNameSearch, setTempNameSearch] = useState('');
+  const [tempEmailSearch, setTempEmailSearch] = useState('');
+  const [tempPhoneSearch, setTempPhoneSearch] = useState('');
+
   const [sortBy, setSortBy] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<string>('asc');
   const [isDeleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
@@ -71,48 +77,30 @@ const Users = () => {
   const queryClient = useQueryClient();
   const { mutate: addOrEditRecord, isPending } = useMutation({
     mutationFn: async () => {
-      // const formData = new FormData();
-      // if (id !== '') {
-      //   formData.append('Id', id);
-      // }
-      // formData.append('Username', userName);
-      // formData.append('LocalizedName', localizedName);
-      // formData.append('Email', email);
-      // formData.append('Password', password);
-      // formData.append('PhoneNumber', phoneNumber);      
-      // formData.append('Role', role);
-      // formData.append('TenantId', tenantId);
-
-      // if (image) {
-      //   formData.append('Image', image);
-      // }
-      let data = {};
-    if (id === '') {
-        data = {
-          userName,
-          localizedName,
-          email,
-          password,
-          phoneNumber,
-          role: 'Admin',
-          tenantId,
-        }
+      const formData = new FormData();
+      if (id !== '') {
+        formData.append('Id', id);
       }
-      else {
-        data = {
-          id: parseInt(id, 10),
-          userName,
-          localizedName,
-          email,
-          password,
-          phoneNumber,
-          role: 'Admin',
-          tenantId,
-        }
+      formData.append('Username', username);
+      formData.append('LocalizedName', localizedName);
+      formData.append('Email', email);
+      formData.append('Password', password);
+      formData.append('PhoneNumber', phoneNumber);      
+      formData.append('Role', 'Admin');
+      formData.append('TenantId', tenantId);
+
+      if (image) {
+        formData.append('Image', image);
       }
 
-      const result = await addUser(data);
-      return result;
+      if (id === '') {
+        // Add operation
+        return await addUser(formData);
+      } else {
+        // Edit operation
+        formData.append('Id', id);
+        return await editUser(formData);
+      }
     },
     onError: (error) => {
       toast({
@@ -162,27 +150,37 @@ const Users = () => {
       console.log('Error', error.message);
     },
     onSuccess: (data) => {
+      setId(id);
       setUserName(data.response.userName);
       setLocalizedName(data.response.localizedName);
       setEmail(data.response.email);
+      setPhoneNumber(data.response.phoneNumber);
       setPassword(data.response.password);
       setRole(data.response.role);
       setId(data.response.id);
       setModalOpen(true);
     },
   });
-  const { data: userData, isPending : fetchPending } = useQuery({
+  const { data: userData, isPending: fetchPending } = useQuery({
     queryKey: [
       'users',
       page,
       rowsPerPage,
       nameSearch,
+      emailSearch,
+      phoneSearch,
+      sortBy,
+      sortOrder,
     ],
     queryFn: () =>
       getUsers(
         page,
         rowsPerPage,
-        nameSearch
+        nameSearch,
+        emailSearch,
+        phoneSearch,
+        sortBy,
+        sortOrder
       ),
   });
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,7 +195,7 @@ const Users = () => {
     setEmail('');
     setPassword('');
     setPhoneNumber('');
-    //setTenantId('');
+    setLocalizedName('');
   };
 
   const onSearchChange = (value?: string, columnName?: string) => {
@@ -205,6 +203,12 @@ const Users = () => {
       case 'name':
         setTempNameSearch(value ?? '');
         break;
+      case 'email':
+        setTempEmailSearch(value ?? '');
+        break;
+      case 'phone':
+          setTempPhoneSearch(value ?? '');
+          break;
       default:
         break;
     }
@@ -212,6 +216,8 @@ const Users = () => {
   };
   const applyFilters = () => {
     setNameSearch(tempNameSearch);
+    setEmailSearch(tempEmailSearch);
+    setPhoneSearch(tempPhoneSearch);
     setFilterModalOpen(false);
     setPage(1);
   };
@@ -315,7 +321,7 @@ const Users = () => {
     if (fetchPending) {
       return (
         <TableRow className="bg-primary">
-          <TableCell colSpan={2}>
+          <TableCell colSpan={5}>
             <div className='flex justify-center'>
               <Loader2 className='mr-2 h-10 w-10 animate-spin' />
             </div>
@@ -327,7 +333,7 @@ const Users = () => {
     if (!userData || userData.totalRecords === 0) {
       return (
         <TableRow>
-          <TableCell colSpan={2} className='text-center'>
+          <TableCell colSpan={5} className='text-center'>
             No data found !
           </TableCell>
         </TableRow>
@@ -338,7 +344,21 @@ const Users = () => {
     return userData?.users?.map((item: any) => (
       <TableRow className='rounded-3xl' key={item.id}>
         <TableCell>
+          <img
+            src={item.pic}
+            alt={item.userName}
+            className='mr-2 h-8 w-8 rounded-full'
+          />
+          {/* Display user name */}
+        </TableCell>
+        <TableCell>
           {locale === 'ar' ? item.localizedName : item.userName}
+        </TableCell>
+        <TableCell>
+          {item.email}
+        </TableCell>
+        <TableCell>
+          {item.phoneNumber}
         </TableCell>
         <TableCell>
           {/* Edit button */}
@@ -369,8 +389,8 @@ const Users = () => {
   };
   return (
     <>
+    <NavBar />
       <Layout>
-        <NavBar />
         <section className=' flex items-center justify-center'>
           <div className='container'>
             <div className='flex items-end justify-between gap-3'>
@@ -409,7 +429,8 @@ const Users = () => {
                 <Button
                   onClick={() => {
                     setNameSearch('');
-                    setDescriptionSearch('');
+                    setEmailSearch('');
+                    setPhoneSearch('');
                   }}
                   color='primary'
                 >
@@ -420,6 +441,7 @@ const Users = () => {
             <Table>
               <TableHeader>
                 <TableHeadRow>
+                <TableHead className='flex items-center'>{t.avtar}</TableHead>
                   <TableHead>
                     <div
                       className='flex items-center'
@@ -441,22 +463,66 @@ const Users = () => {
                       )}
                     </div>
                   </TableHead>
-                  <TableHead>{t.action}</TableHead>
+                  <TableHead>
+                    <div
+                      className='flex items-center'
+                      onClick={() => handleSort('email')}
+                    >
+                      {t.email}
+                      {sortBy === 'email' ? (
+                        <span className='ml-2'>
+                          {sortOrder === 'asc' ? (
+                            <ChevronUp />
+                          ) : (
+                            <ChevronDown />
+                          )}
+                        </span>
+                      ) : (
+                        <span className='ml-2'>
+                          <ChevronDown />
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div
+                      className='flex items-center'
+                      onClick={() => handleSort('phone')}
+                    >
+                      {t.phone}
+                      {sortBy === 'phone' ? (
+                        <span className='ml-2'>
+                          {sortOrder === 'asc' ? (
+                            <ChevronUp />
+                          ) : (
+                            <ChevronDown />
+                          )}
+                        </span>
+                      ) : (
+                        <span className='ml-2'>
+                          <ChevronDown />
+                        </span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead className='flex items-center'>{t.action}</TableHead>
                 </TableHeadRow>
               </TableHeader>
               <TableBody>{renderTableBody()}</TableBody>
               {userData?.totalRecords > 0 && (
                 <TableFooter>
-                  <TableCell className='flex justify-start'>
+                  <TableCell colSpan={4}>
+                    <div className="flex justify-between items-center">
                     <PaginationSection
                       totalPosts={userData?.totalRecords}
                       postsPerPage={rowsPerPage}
                       currentPage={page}
                       setCurrentPage={setPage}
                     />
+                    </div>
                   </TableCell>
-                  <TableCell className=''>
-                    <span className='text-default-400 text-small'>
+                  <TableCell>
+                  <span className='text-default-400 text-small'>
                       {'Page ' +
                         page +
                         ' of ' +
@@ -521,7 +587,7 @@ const Users = () => {
                           type='text'
                           name='username'
                           id='username'
-                          value={userName}
+                          value={username}
                           onChange={(e) => setUserName(e.target.value)}
                           placeholder={t.name}
                           required
@@ -539,28 +605,29 @@ const Users = () => {
                           required
                         />
                         <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                          Email
+                          {t.email}
                         </label>
                         <Input
                           type='text'
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder='email'
+                          placeholder='example@email.com'
                           required
+                          disabled={id !== ''}
                         />
-                        <label className='mb-2 block text-sm font-medium text-gray-900 dark:text-white'>
-                          Password
+                        <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
+                          {t.password}
                         </label>
                         <Input
                           type='password'
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder='*******'
-                          className='block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-500 dark:bg-gray-600 dark:text-white dark:placeholder-gray-400'
                           required
+                          disabled={id !== ''}
                         />
                         <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
-                          Phone Number
+                          {t.phone}
                         </label>
                         <Input
                           type='text'
@@ -568,7 +635,7 @@ const Users = () => {
                           id='phonenumber'
                           value={phoneNumber}
                           onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder='Phone'
+                          placeholder={t.phone}
                           required
                         />
                         <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
@@ -649,12 +716,33 @@ const Users = () => {
                             onSearchChange(e.target.value, 'name')
                           }
                         />
+                        <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
+                          {t.email}
+                        </label>
+                        <Input
+                          type='text'
+                          placeholder={t.search}
+                          value={tempEmailSearch}
+                          onChange={(e) =>
+                            onSearchChange(e.target.value, 'email')
+                          }
+                        />
+                        <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
+                          {t.phone}
+                        </label>
+                        <Input
+                          type='text'
+                          placeholder={t.search}
+                          value={tempPhoneSearch}
+                          onChange={(e) =>
+                            onSearchChange(e.target.value, 'phone')
+                          }
+                        />
                         <Button
                           type='submit'
                           isLoading={fetchPending}
                           disabled={fetchPending}
-                          className='w-full rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
-                        >
+                          className='text-bg-primary-foreground w-full rounded-lg bg-primary px-5 py-2.5 text-center text-sm font-medium hover:bg-opacity-80'>
                           {t.applyFilters}
                         </Button>
                       </form>
