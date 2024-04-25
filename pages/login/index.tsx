@@ -62,7 +62,6 @@ const Login = () => {
   //       }
   //     );
   //     const resp = await fetchResponse.json();
-  //     console.log(resp);
   //     if (!fetchResponse.ok) {
   //       if (resp.errors) {
   //         setEmailError(resp.errors.Email);

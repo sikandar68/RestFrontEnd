@@ -270,7 +270,6 @@ const Users = () => {
           const respToken = resp.response.token || '';
 
           const json = Jwt.decode(respToken) as { [key: string]: string };
-          console.log(json);
           setUserCookies(resp.response.token, json['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '', json['saId'] || '', false, resp.response.clientPreferences);
           window.location.href = '/';
       } catch (error) {

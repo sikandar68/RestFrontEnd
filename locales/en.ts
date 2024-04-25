@@ -65,4 +65,11 @@ export default {
   userImage : "User Image",
   phone : "Phone",
   avtar: "Avtar",
+  proceed: "Proceed",
+  coupon:"Coupon",
+  serviceCharges: "SrvcCharg",
+  eatIn : "EatIn",
+  quantity: "Quantity",
+  item: "Item",
+  price:"Price",
 };

@@ -67,4 +67,11 @@ export default {
   userImage : "صورة المستخدم",
   phone : "هاتف",
   avtar: "أفتار",
+  proceed: "يتابع",
+  coupon:"قسيمة",
+  serviceCharges: " الخدمات",
+  eatIn : "تناول ",
+  quantity: "كمية",
+  item: "غرض",
+  price:"سعر",
 };

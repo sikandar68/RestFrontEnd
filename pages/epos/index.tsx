@@ -25,7 +25,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { API_CONFIG } from '@/constants/api-config';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import CheckOutForm from '@/components/CheckOutForm';
+import EposCheckOutForm from '@/components/EposCheckOutForm';
 import CustomerPopup from '@/components/CustomerPopup';
 import { useReactToPrint } from 'react-to-print';
 import Receipt from '@/components/Receipt';
@@ -34,7 +34,7 @@ import { getCouponByCode } from '@/services/order';
 import { getFloors, getTables } from '@/services/floorTable';
 import TicketNote from '@/components/TicketNote';
 import OrderItemSection from '@/components/OrderItemsSection';
-import Cart from '@/components/Cart';
+import EposCart from '@/components/EposCart';
 import en from '@/locales/en';
 import ar from '@/locales/ar';
 import SelectTable from '@/components/SelectTable';
@@ -82,6 +82,7 @@ const Order = () => {
   const [tenantId, setTenantId] = useState('');
   const [isCustomerPopupOpen, setIsCustomerPopupOpen] = useState(false);
   const [isAdOnPopupOpen, setIsAdOnPopupOpen] = useState(false);
+  const [isCheckOutFormOpen, setCheckOutFormOpen] = useState(false);
   const [isCouponPopupOpen, setIsCouponPopupOpen] = useState(false);
   const [customerData, setCustomerData] = useState<Customer[]>([]);
   const [couponError, setCouponError] = useState('');
@@ -131,7 +132,7 @@ const Order = () => {
         `${API_CONFIG.BASE_URL}api/Item/GetItemsBySubCategoryId?subCategoryId=${id}`
       )
       .then((response) => {
-        setItemData(response.data);
+        setCollection(response.data);
       })
       .catch((error) => {
         console.error(error);
@@ -195,27 +196,7 @@ const Order = () => {
       console.error('Error in getCollectionData:', error);
     }
   };
-  const handleCollectionClick = async (
-    id: number,
-    type: string,
-    name: string
-  ) => {
-    try {
-      const data = await fetchCollectionData(id, type);
-
-      if (data.type === 'item') {
-        setItemData(data.data);
-      } else {
-        setCollection(data);
-        const newTab = { id, type, label: name };
-        setTabs([...tabs, newTab]);
-        setSelectedTabIndex(tabs.length);
-      }
-    } catch (error) {
-      console.error('Error in getCollectionData:', error);
-    }
-    //getCollectionData(id, type);
-  };
+  
   const handleTabClick = async (
     clickedIndex: number,
     clickedId: number,
@@ -279,6 +260,73 @@ const Order = () => {
       }
       //setSelectedItem(undefined);
     }
+  };
+  const handleCollectionClick = async (
+    id: number,
+    type: string,
+    name: string
+  ) => {
+    try {
+      const data = await fetchCollectionData(id, type);
+      if(type == 'item'){
+        var item = collection.find(item => item.id === id);
+        if (data && data != '') {
+            setAdOnData(data.adOnItems);
+            setAdOnCategories([]);
+            setAdOnCategories((prevCategories) => [
+              ...prevCategories,
+              data.adOnCategory,
+            ]);
+            setIsAdOnPopupOpen(true);
+            setSelectedItem(item);
+          } else {
+            const existingItemIndex = orderData.items.findIndex(
+              (orderItem) => orderItem.itemId === item?.id
+            );
+      
+            if (existingItemIndex !== -1) {
+              setOrderData((prevOrderData) => {
+                const updatedItems = [...prevOrderData.items];
+                updatedItems[existingItemIndex].quantity += 1;
+                return { ...prevOrderData, items: updatedItems };
+              });
+            } else {
+                if(item !== undefined){
+                    setOrderData((prevOrderData) => ({
+                        ...prevOrderData,
+                        items: [
+                          ...prevOrderData.items,
+                          {
+                            itemId: item!.id,
+                            itemName: item!.name,
+                            price: item!.price,
+                            quantity: 1,
+                            subCategoryName: item!.subCategoryName,
+                            adOnItems: [],
+                          },
+                        ],
+                      }));
+                }
+              
+            }
+            //setSelectedItem(undefined);
+          }
+      }
+      else{
+        if (data.type === 'item') {
+            setCollection(data.data);
+          } else {
+            setCollection(data);
+          }
+          const newTab = { id, type, label: name };
+            setTabs([...tabs, newTab]);
+            setSelectedTabIndex(tabs.length);
+      }
+      
+    } catch (error) {
+      console.error('Error in getCollectionData:', error);
+    }
+    //getCollectionData(id, type);
   };
   const handleAdOnClick = async (selectedAdOns: AdOnItem[]) => {
     if(selectedItem){
@@ -418,7 +466,7 @@ const Order = () => {
   };
 
   const handleSettleClick = async () => {
-    setMiddleComponent('checkoutform');
+    setCheckOutFormOpen(true);
   };
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -530,207 +578,72 @@ const Order = () => {
   };
   return (
     <>
-      <div className='max-h-screen w-full min-w-[500px] bg-white'>
-        <nav className='w-full min-w-[500px] border-gray-200 bg-[#f5f6f9] p-2'>
-          <div className='mx-auto flex max-w-screen-xl items-center justify-between'>
+      <div className='flex w-full min-w-[500px] flex-col bg-[#0175a8]'>
+        <nav className='w-auto min-w-[500px] border-gray-200 bg-[#00b5fa] p-2'>
+          <div className='mx-auto flex items-center justify-between'>
             <Button
               onClick={() => router.push('/')}
               className='bg-cyan text-sm font-medium text-white'
             >
               {t.mainMenu}
             </Button>
-            <div className='flex flex-row items-center'>
-              <ul className='flex space-x-4'>
-                <li>
-                  <Select value={layout} onValueChange={handleChange}>
-                    <SelectTrigger>{layout}</SelectTrigger>
-                    <SelectContent>
-                      {layoutsList.map((op) => (
-                        <SelectItem value={op.key} key={op.key}>
-                          {op.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </li>
-                <li>Date</li>
-              </ul>
-            </div>
           </div>
         </nav>
-        {selectTableOpen ? (
-          <SelectTable
-            tableData={tableData}
-            floorData={floorData}
-            handleTableClick={handleTableClick}
-            getTableData={getTableData}
-          />
-        ) : (
-          <div>
-            <div>
-              <Tabs
-                selectedIndex={selectedTabIndex}
-                onSelect={(index) => setSelectedTabIndex(index)}
-              >
-                <TabList>
-                  {tabs.map((tab, index) => (
-                    <Tab
-                      key={index}
-                      onClick={() => handleTabClick(index, tab.id, tab.type)}
-                    >
-                      {tab.label}
-                    </Tab>
-                  ))}
-                </TabList>
-              </Tabs>
-              <div className='bg-[#efefef] px-1'>
-                <div className='scrollbar-hide flex max-h-[100px] flex-row gap-x-4 overflow-x-auto'>
-                  {collection.map((item) => (
-                    <div
-                      key={item.id}
-                      className='my-1 flex min-w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-cyan shadow-md'
-                      onClick={() =>
-                        handleCollectionClick(item.id, item.type, item.name)
-                      }
-                    >
-                      <img
-                        src={item.pic}
-                        alt={item.name}
-                        className='mt-1 h-8 w-8 object-cover'
-                      />
-                      <div className='p-1'>
-                        <h4 className='text-center font-bold text-white'>
-                          {locale === 'en' ? item.name : item.localizedName}
-                        </h4>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className='flex flex-col gap-x-8 lg:flex-row'>
-              <div className='flex flex-row lg:ml-10 lg:mt-2 lg:flex-col'>
-                <Button
-                  onClick={() => setSelectTableOpen(true)}
-                  className='mb-4 flex h-16 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-yellow text-yellow-foreground shadow-md md:flex-row'
-                >
-                  {t.changeTable}
-                </Button>
-                <Button
-                  onClick={() => handleSelectCustomerClick()}
-                  className='mb-4 flex h-16 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-primary text-primary-foreground shadow-md'
-                >
-                  {t.selectCustomer}
-                </Button>
-                <Button
-                  onClick={() => setMiddleComponent('ticketNote')}
-                  className='mb-4 flex h-16 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-gray text-gray-foreground shadow-md'
-                >
-                  {t.ticketNote}
-                </Button>
-                <Button
-                  variant='destructive'
-                  className='mb-4 flex h-16 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border shadow-md'
-                >
-                  {t.printBill}
-                </Button>
-                <Button
-                  onClick={handleSaveClick}
-                  className='mb-2 flex h-16 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-light text-light-foreground shadow-md'
-                >
-                  {t.addTicket}
-                </Button>
-              </div>
-              {middleComponent == 'checkoutform' ? (
-                <CheckOutForm
-                  orderData={orderData}
-                  onUpdateOrderData={handleUpdateOrderData}
-                  handlePrintBillClick={handlePrintBillClick}
-                  handleDiscountClick={handleDiscountClick}
-                />
-              ) : middleComponent == 'ticketNote' ? (
-                <TicketNote
-                  orderData={orderData}
-                  setOrderData={setOrderData}
-                  setMiddleComponent={setMiddleComponent}
-                />
-              ) : (
-                <OrderItemSection
-                  itemData={itemData}
-                  handleItemClick={handleItemClick}
-                />
-              )}
-              <Cart
-                orderData={orderData}
-                handleQuantityChange={handleQuantityChange}
-                handleRemoveItemClick={handleRemoveItemClick}
-                handleSettleClick={handleSettleClick}
-                handleCloseClick={handleCloseClick}
-              />
-            </div>
-            <div>
-              {isModalOpen && (
+        <div id='body' className='flex w-full flex-col sm:flex-row'>
+          <div className='w-full sm:w-3/4'>
+            {' '}
+            {/* Updated this line */}
+            <Tabs
+              selectedIndex={selectedTabIndex}
+              onSelect={(index) => setSelectedTabIndex(index)}
+            >
+              <TabList>
+                {tabs.map((tab, index) => (
+                  <Tab
+                    key={index}
+                    onClick={() => handleTabClick(index, tab.id, tab.type)}
+                  >
+                    {tab.label}
+                  </Tab>
+                ))}
+              </TabList>
+            </Tabs>
+            <div className='max-h-[calc(100vh - 96px)] flex flex-row flex-wrap gap-x-4'>
+              {collection.map((item) => (
                 <div
-                  id='default-modal'
-                  className='fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform p-4 md:p-5'
+                  key={item.id}
+                  className='my-1 flex h-36 w-20 flex-col items-center justify-start overflow-hidden rounded-md bg-[#00b5fa] shadow-md'
+                  onClick={() =>
+                    handleCollectionClick(item.id, item.type, item.name)
+                  }
                 >
-                  <div className='relative max-h-full w-full max-w-2xl p-4'>
-                    {/* Modal content */}
-                    <div className='relative bg-background'>
-                      {/* Modal header */}
-                      <div className='flex items-center justify-between rounded-t p-2 md:p-3'>
-                        <button
-                          type='button'
-                          onClick={() => setIsModalOpen(false)}
-                          className='ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-black hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white'
-                          data-modal-hide='default-modal'
-                        >
-                          <svg
-                            className='h-3 w-3'
-                            aria-hidden='true'
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 14 14'
-                          >
-                            <path
-                              stroke='currentColor'
-                              stroke-linecap='round'
-                              stroke-linejoin='round'
-                              stroke-width='2'
-                              d='m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6'
-                            />
-                          </svg>
-                          <span className='sr-only'>Close modal</span>
-                        </button>
-                      </div>
-                      {/* Modal body */}
-                      <div className='space-y-4 p-4 md:p-5'>
-                        <div className='scrollbar-hide flex max-h-[100px] flex-row justify-center gap-4 overflow-x-auto'>
-                          {itemData.map((item) => (
-                            <div
-                              key={item.id}
-                              className=' my-2 flex h-20 w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-cyan shadow-md'
-                              onClick={() => handleItemClick(item)}
-                            >
-                              <div className='flex flex-col p-1'>
-                                <h3 className='text-center font-bold text-white'>
-                                  {item.name}
-                                </h3>
-                                <h4 className='text-center font-bold text-white'>
-                                  {'(' + item.price + ')'}
-                                </h4>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                  <img
+                    //src={item.pic}
+                    src='https://localhost:7160/Image/gril244047809.jpg'
+                    alt={item.name}
+                    className='mt-1 h-8 w-8 object-cover'
+                  />
+                  <div className='p-1'>
+                    <h4 className='text-center font-bold text-white'>
+                      {locale === 'en' ? item.name : item.localizedName}
+                    </h4>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
-        )}
+          <div className='w-full sm:w-1/4'>
+            {' '}
+            {/* Updated this line */}
+            <EposCart
+              orderData={orderData}
+              handleQuantityChange={handleQuantityChange}
+              handleRemoveItemClick={handleRemoveItemClick}
+              handleSettleClick={handleSettleClick}
+              handleCloseClick={handleCloseClick}
+            />
+          </div>
+        </div>
       </div>
       {isCustomerPopupOpen && (
         <CustomerPopup
@@ -755,6 +668,16 @@ const Order = () => {
           setCouponError={setCouponError}
           couponError={couponError}
         />
+      )}
+      {isCheckOutFormOpen && (
+        <EposCheckOutForm
+        orderData={orderData}
+        onUpdateOrderData={handleUpdateOrderData}
+        handlePrintBillClick={handlePrintBillClick}
+        handleDiscountClick={handleDiscountClick}
+        handleSaveClick={handleSaveClick}
+        setCheckOutFormOpen={setCheckOutFormOpen}
+      />
       )}
       <div className='hidden'>
         <Receipt ref={printRef} orderData={orderData} />
