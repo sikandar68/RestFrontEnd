@@ -1,4 +1,5 @@
 import { API_CONFIG } from '@/constants/api-config';
+import { OrderItem } from '@/types/types';
 
 // all orders
 export const getOrders = async (
@@ -38,4 +39,8 @@ export const getCouponByCode = async (couponCode: string) => {
   );
 
   return response;
+};
+
+export const calculateTotal = (items: OrderItem[]) => {
+  return items?.reduce((total, item) => total + item.quantity * item.price, 0);
 };

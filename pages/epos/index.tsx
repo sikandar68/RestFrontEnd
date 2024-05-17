@@ -17,6 +17,7 @@ import {
   Floor,
   Item,
   OrderData,
+  OrderItem,
   SubCategory,
   Table,
 } from '@/types/types';
@@ -41,6 +42,11 @@ import SelectTable from '@/components/SelectTable';
 import AdOnPopup from '@/components/AdOnPopup';
 import { parseCookies } from 'nookies';
 import Jwt from 'jsonwebtoken';
+import { DeliveryType } from '@/constants/enum';
+import DiscountWindow from '@/components/DiscountWindow';
+import ServiceChargesWindow from '@/components/ServiceChargesWindow';
+import ManualItem from '@/components/NewItem';
+import NewItem from '@/components/NewItem';
 
 const Order = () => {
   const router = useRouter();
@@ -74,15 +80,30 @@ const Order = () => {
     status: 'New',
     paymentType: 'Cash',
     deliveryType: 'waiting',
-    items: [],
+    customer: {
+      id: 0,
+      name: '',
+      localizedName: '',
+      phone: '',
+      homeNumber: '',
+      postCode: '',
+      street: '',
+      town: '',
+      email: '',
+    },
+    orderDetails: [],
     discount: 0,
+    serviceCharges: 0,
     note: '',
   });
   const [middleComponent, setMiddleComponent] = useState('');
   const [tenantId, setTenantId] = useState('');
   const [isCustomerPopupOpen, setIsCustomerPopupOpen] = useState(false);
+  const [isNewItemPopupOpen, setNewItemPopupOpen] = useState(false);
   const [isAdOnPopupOpen, setIsAdOnPopupOpen] = useState(false);
   const [isCheckOutFormOpen, setCheckOutFormOpen] = useState(false);
+  const [isDiscountWindowOpen, setDiscountWindowOpen] = useState(false);
+  const [isServiceChargesWindowOpen, setServiceChargesWindowOpen] = useState(false);
   const [isCouponPopupOpen, setIsCouponPopupOpen] = useState(false);
   const [customerData, setCustomerData] = useState<Customer[]>([]);
   const [couponError, setCouponError] = useState('');
@@ -90,7 +111,7 @@ const Order = () => {
   const [selectTableOpen, setSelectTableOpen] = useState(false);
   const [tableData, setTableData] = useState<Table[]>([]);
   const [tabs, setTabs] = useState([
-    { id: 0, type: 'all', label: 'Categories' },
+    { id: 0, type: 'all', label: t.categories }
   ]);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const { toast } = useToast();
@@ -196,7 +217,13 @@ const Order = () => {
       console.error('Error in getCollectionData:', error);
     }
   };
-  
+  const handleEatInClick = () => {
+    setOrderData({
+      ...orderData,
+      deliveryType: 'eatin'
+    });
+    setSelectTableOpen(true);
+  }
   const handleTabClick = async (
     clickedIndex: number,
     clickedId: number,
@@ -232,13 +259,13 @@ const Order = () => {
       setIsAdOnPopupOpen(true);
       setSelectedItem(item);
     } else {
-      const existingItemIndex = orderData.items.findIndex(
+      const existingItemIndex = orderData.orderDetails.findIndex(
         (orderItem) => orderItem.itemId === item.id
       );
 
       if (existingItemIndex !== -1) {
         setOrderData((prevOrderData) => {
-          const updatedItems = [...prevOrderData.items];
+          const updatedItems = [...prevOrderData.orderDetails];
           updatedItems[existingItemIndex].quantity += 1;
           return { ...prevOrderData, items: updatedItems };
         });
@@ -246,7 +273,7 @@ const Order = () => {
         setOrderData((prevOrderData) => ({
           ...prevOrderData,
           items: [
-            ...prevOrderData.items,
+            ...prevOrderData.orderDetails,
             {
               itemId: item.id,
               itemName: item.name,
@@ -268,75 +295,72 @@ const Order = () => {
   ) => {
     try {
       const data = await fetchCollectionData(id, type);
-      if(type == 'item'){
-        var item = collection.find(item => item.id === id);
+      if (type == 'item') {
+        var item = collection.find((item) => item.id === id);
         if (data && data != '') {
-            setAdOnData(data.adOnItems);
-            setAdOnCategories([]);
-            setAdOnCategories((prevCategories) => [
-              ...prevCategories,
-              data.adOnCategory,
-            ]);
-            setIsAdOnPopupOpen(true);
-            setSelectedItem(item);
+          setAdOnData(data.adOnItems);
+          setAdOnCategories([]);
+          setAdOnCategories((prevCategories) => [
+            ...prevCategories,
+            data.adOnCategory,
+          ]);
+          setIsAdOnPopupOpen(true);
+          setSelectedItem(item);
+        } else {
+          const existingItemIndex = orderData.orderDetails.findIndex(
+            (orderItem) => orderItem.itemId === item?.id
+          );
+
+          if (existingItemIndex !== -1) {
+            setOrderData((prevOrderData) => {
+              const updatedItems = [...prevOrderData.orderDetails];
+              updatedItems[existingItemIndex].quantity += 1;
+              return { ...prevOrderData, items: updatedItems };
+            });
           } else {
-            const existingItemIndex = orderData.items.findIndex(
-              (orderItem) => orderItem.itemId === item?.id
-            );
-      
-            if (existingItemIndex !== -1) {
-              setOrderData((prevOrderData) => {
-                const updatedItems = [...prevOrderData.items];
-                updatedItems[existingItemIndex].quantity += 1;
-                return { ...prevOrderData, items: updatedItems };
-              });
-            } else {
-                if(item !== undefined){
-                    setOrderData((prevOrderData) => ({
-                        ...prevOrderData,
-                        items: [
-                          ...prevOrderData.items,
-                          {
-                            itemId: item!.id,
-                            itemName: item!.name,
-                            price: item!.price,
-                            quantity: 1,
-                            subCategoryName: item!.subCategoryName,
-                            adOnItems: [],
-                          },
-                        ],
-                      }));
-                }
-              
+            if (item !== undefined) {
+              setOrderData((prevOrderData) => ({
+                ...prevOrderData,
+                orderDetails: [
+                  ...prevOrderData.orderDetails,
+                  {
+                    itemId: item!.id,
+                    itemName: item!.name,
+                    price: item!.price,
+                    quantity: 1,
+                    subCategoryName: item!.subCategoryName,
+                    adOnItems: [],
+                  },
+                ],
+              }));
             }
-            //setSelectedItem(undefined);
           }
-      }
-      else{
+          //setSelectedItem(undefined);
+        }
+      } else {
         if (data.type === 'item') {
-            setCollection(data.data);
-          } else {
-            setCollection(data);
-          }
-          const newTab = { id, type, label: name };
-            setTabs([...tabs, newTab]);
-            setSelectedTabIndex(tabs.length);
+          setCollection(data.data);
+        } else {
+          setCollection(data);
+        }
+        const newTab = { id, type, label: name };
+        setTabs([...tabs, newTab]);
+        setSelectedTabIndex(tabs.length);
       }
-      
     } catch (error) {
       console.error('Error in getCollectionData:', error);
     }
     //getCollectionData(id, type);
   };
   const handleAdOnClick = async (selectedAdOns: AdOnItem[]) => {
-    if(selectedItem){
-      const existingItemIndex = orderData.items.findIndex(
+    if (selectedItem) {
+      const existingItemIndex = orderData.orderDetails.findIndex(
         (orderItem) => orderItem.itemId === selectedItem?.id
       );
-  
+
       if (existingItemIndex !== -1) {
         setOrderData((prevOrderData) => {
-          const updatedItems = [...prevOrderData.items];
+          const updatedItems = [...prevOrderData.orderDetails];
           updatedItems[existingItemIndex].quantity += 1;
           return { ...prevOrderData, items: updatedItems };
         });
@@ -344,7 +368,7 @@ const Order = () => {
         setOrderData((prevOrderData) => ({
           ...prevOrderData,
           items: [
-            ...prevOrderData.items,
+            ...prevOrderData.orderDetails,
             {
               itemId: selectedItem?.id,
               itemName: selectedItem?.name,
@@ -419,16 +443,41 @@ const Order = () => {
     getCustomerData();
     setIsCustomerPopupOpen(true);
   };
-  const handleAddCustomer = (customer: Customer) => {
-    setOrderData((prevOrderData) => {
-      return {
-        ...prevOrderData,
-        customer: customer,
-      };
-    });
+  const handleAddCustomer = async (customer: Customer) => {
+    // Debugging
+    debugger;
 
-    setIsCustomerPopupOpen(false);
+    // Set the customer in orderData
+    const updatedOrderData = {
+      ...orderData,
+      customer: customer,
+    };
+    await setOrderData(updatedOrderData);
+
+    // Close the checkout form
+    setCheckOutFormOpen(false);
+
+    // Call handleSaveClick after updating orderData
+    handleSaveClick();
   };
+
+  const handleAddNewItem = async (newItem: OrderItem) => {
+    setOrderData((prevOrderData) => ({
+      ...prevOrderData,
+      items: [
+        ...prevOrderData.orderDetails,
+        {
+          itemId: newItem.itemId,
+          itemName: newItem.itemName,
+          price: newItem.price,
+          quantity: newItem.quantity,
+          subCategoryName: '',
+          adOnItems: [],
+        },
+      ],
+    }));
+  };
+
   const handleApplyCoupon = async (couponCode: string) => {
     var response = await getCouponByCode(couponCode);
 
@@ -442,11 +491,11 @@ const Order = () => {
         discountAmount = parseFloat(couponData.couponValue);
       } else if (couponData.type === 'percentage') {
         discountAmount =
-          (orderData.items.reduce((total, item) => total + item.price, 0) /
+          (orderData.orderDetails.reduce((total, item) => total + item.price, 0) /
             100) *
           parseFloat(couponData.couponValue);
       }
-      const orderTotal = orderData.items.reduce(
+      const orderTotal = orderData.orderDetails.reduce(
         (total, item) => total + item.price * item.quantity,
         0
       );
@@ -455,6 +504,7 @@ const Order = () => {
           ...orderData,
           discount: discountAmount,
         });
+        setIsCouponPopupOpen(false);
       } else {
         setCouponError('Order amount is less then minimum order amount.');
       }
@@ -462,7 +512,9 @@ const Order = () => {
   };
 
   const handleUpdateOrderData = (updatedOrderData: OrderData) => {
+    debugger;
     setOrderData(updatedOrderData);
+    console.log(orderData);
   };
 
   const handleSettleClick = async () => {
@@ -473,20 +525,37 @@ const Order = () => {
   });
   const handleSaveClick = async () => {
     try {
+      debugger;
+      if(orderData.deliveryType === DeliveryType.Delivery || orderData.deliveryType === DeliveryType.Collection){
+        if(orderData.customer.name === ''){
+          toast({
+            title: `${t.error}`,
+            description: `${t.customerNameRequired}`,
+          });
+          return;
+        }
+        else if(orderData.customer.phone === ''){
+          toast({
+            title: `${t.error}`,
+            description: `${t.customerPhoneRequired}`,
+          });
+          return;
+        }
+      }
       const apiRequestData = {
         id: 0,
         tableNumber: orderData.tableNumber,
         status: orderData.status,
-        tenantId : tenantId,
+        tenantId: tenantId,
         paymentType: orderData.paymentType,
         deliveryType: orderData.deliveryType,
         customer: orderData.customer,
-        orderDetails: orderData.items.map((item) => ({
+        orderDetails: orderData.orderDetails.map((item) => ({
           itemId: item.itemId,
           itemName: item.itemName,
           price: item.price,
           quantity: item.quantity,
-          addonItems: item.adOnItems
+          addonItems: item.adOnItems,
           //subCategoryName: item.subCategoryName,
         })),
       };
@@ -529,7 +598,7 @@ const Order = () => {
   };
   const handleQuantityChange = (index: number, newQuantity: number) => {
     setOrderData((prevOrderData) => {
-      const updatedItems = [...prevOrderData.items];
+      const updatedItems = [...prevOrderData.orderDetails];
       updatedItems[index].quantity = newQuantity;
       return { ...prevOrderData, items: updatedItems };
     });
@@ -537,7 +606,7 @@ const Order = () => {
 
   const handleRemoveItemClick = (index: number) => {
     setOrderData((prevOrderData) => {
-      const updatedItems = [...prevOrderData.items];
+      const updatedItems = [...prevOrderData.orderDetails];
       updatedItems.splice(index, 1);
       return { ...prevOrderData, items: updatedItems };
     });
@@ -548,8 +617,20 @@ const Order = () => {
       status: 'New',
       paymentType: 'Cash',
       deliveryType: 'waiting',
-      items: [],
+      customer: {
+        id: 0,
+        name: '',
+        localizedName: '',
+        phone: '',
+        homeNumber: '',
+        postCode: '',
+        street: '',
+        town: '',
+        email: '',
+      },
+      orderDetails: [],
       discount: 0,
+      serviceCharges: 0,
       note: '',
     });
   };
@@ -589,8 +670,16 @@ const Order = () => {
             </Button>
           </div>
         </nav>
+        {selectTableOpen ? (
+          <SelectTable
+            tableData={tableData}
+            floorData={floorData}
+            handleTableClick={handleTableClick}
+            getTableData={getTableData}
+          />
+        ) :(
         <div id='body' className='flex w-full flex-col sm:flex-row'>
-          <div className='w-full sm:w-3/4'>
+          <div className='mx-2 w-full sm:w-5/5'>
             {' '}
             {/* Updated this line */}
             <Tabs
@@ -614,17 +703,19 @@ const Order = () => {
                   key={item.id}
                   className='my-1 flex h-36 w-20 flex-col items-center justify-start overflow-hidden rounded-md bg-[#00b5fa] shadow-md'
                   onClick={() =>
-                    handleCollectionClick(item.id, item.type, item.name)
+                    handleCollectionClick(item.id, item.type, locale === 'ar' ? item.localizedName : item.name)
                   }
                 >
-                  <img
-                    //src={item.pic}
-                    src='https://localhost:7160/Image/gril244047809.jpg'
-                    alt={item.name}
-                    className='mt-1 h-8 w-8 object-cover'
-                  />
+                  <div className='h-12 w-full'>
+                    <img
+                      src='https://localhost:7160/Image/gril244047809.jpg'
+                      alt={item.name}
+                      className='h-full w-full object-cover'
+                    />
+                  </div>
                   <div className='p-1'>
-                    <h4 className='text-center font-bold text-white'>
+                  <h4 className='text-center font-bold'>{item.price}</h4>
+                    <h4 className='text-center text-white'>
                       {locale === 'en' ? item.name : item.localizedName}
                     </h4>
                   </div>
@@ -632,7 +723,7 @@ const Order = () => {
               ))}
             </div>
           </div>
-          <div className='w-full sm:w-1/4'>
+          <div className='w-full sm:w-2/6'>
             {' '}
             {/* Updated this line */}
             <EposCart
@@ -641,16 +732,16 @@ const Order = () => {
               handleRemoveItemClick={handleRemoveItemClick}
               handleSettleClick={handleSettleClick}
               handleCloseClick={handleCloseClick}
+              setIsCouponPopupOpen={setIsCouponPopupOpen}
+              setDiscountWindowOpen={setDiscountWindowOpen}
+              setServiceChargesWindowOpen={setServiceChargesWindowOpen}
+              handleEatInClick={handleEatInClick}
+              setNewItemPopupOpen={setNewItemPopupOpen}
             />
           </div>
         </div>
+        )}
       </div>
-      {isCustomerPopupOpen && (
-        <CustomerPopup
-          onAddCustomer={handleAddCustomer}
-          setIsCustomerPopupOpen={setIsCustomerPopupOpen}
-        />
-      )}
       {isAdOnPopupOpen && (
         <AdOnPopup
           adOnData={adOnData}
@@ -669,15 +760,36 @@ const Order = () => {
           couponError={couponError}
         />
       )}
+      {isNewItemPopupOpen && (
+        <NewItem
+        onAddNewItem={handleAddNewItem}
+        setNewItemPopupOpen={setNewItemPopupOpen}
+      />
+      )}
       {isCheckOutFormOpen && (
         <EposCheckOutForm
-        orderData={orderData}
-        onUpdateOrderData={handleUpdateOrderData}
-        handlePrintBillClick={handlePrintBillClick}
-        handleDiscountClick={handleDiscountClick}
-        handleSaveClick={handleSaveClick}
-        setCheckOutFormOpen={setCheckOutFormOpen}
-      />
+          orderData={orderData}
+          onUpdateOrderData={handleUpdateOrderData}
+          handlePrintBillClick={handlePrintBillClick}
+          handleDiscountClick={handleDiscountClick}
+          handleSaveClick={handleSaveClick}
+          setCheckOutFormOpen={setCheckOutFormOpen}
+          onAddCustomer={handleAddCustomer}
+        />
+      )}
+      {isDiscountWindowOpen && (
+        <DiscountWindow
+          orderData={orderData}
+          onUpdateOrderData={handleUpdateOrderData}
+          setDiscountWindowOpen={setDiscountWindowOpen}
+        />
+      )}
+      {isServiceChargesWindowOpen && (
+        <ServiceChargesWindow
+          orderData={orderData}
+          onUpdateOrderData={handleUpdateOrderData}
+          setServiceChargesWindowOpen={setServiceChargesWindowOpen}
+        />
       )}
       <div className='hidden'>
         <Receipt ref={printRef} orderData={orderData} />

@@ -264,7 +264,6 @@ const Tenants = () => {
   };
   return (
     <>
-      <NavBar />
       <Layout>
         <section className=' flex items-center justify-center'>
           <div className='container'>
@@ -485,7 +484,7 @@ const Tenants = () => {
                             <Input
                               type='file'
                               accept='image/*'
-                              className='text-secondary-foreground'
+                              className='text-secondary-foreground bg-light'
                               onChange={handleRestaurantLogoChange}
                             />
                             <label className='mb-2 block text-sm font-medium text-secondary-foreground'>
@@ -494,7 +493,7 @@ const Tenants = () => {
                             <Input
                               type='file'
                               accept='image/*'
-                              className='text-secondary-foreground'
+                              className='text-secondary-foreground bg-light'
                               onChange={handleUserImageChange}
                             />
                           </>

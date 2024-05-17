@@ -8,6 +8,7 @@ import { API_CONFIG } from '@/constants/api-config';
 import Image from 'next/image';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ClientPreference } from '@/types/types';
+import { toast } from '@/components/ui/use-toast';
 
 const Login = () => {
   const router = useRouter();
@@ -31,6 +32,7 @@ const Login = () => {
           body: JSON.stringify(obj),
         }
       );
+      debugger;
       const resp = await fetchResponse.json();
       return resp;
     },
@@ -38,9 +40,15 @@ const Login = () => {
       console.log('Error', error.message);
     },
     onSuccess: (data) => {
-      if(!data.errors){
+      if(data.isSuccess){
         setUserCookies(data.response.token, userInfo.email || '', false, data.response.clientPreferences);
         window.location.href = '/';
+      }
+      else{
+        toast({
+          title: 'Error',
+          description: `${data.response}`,
+        });
       }
     },
   });
@@ -122,10 +130,8 @@ const Login = () => {
     <div className='flex min-h-screen items-center justify-center bg-[#f5f6f9]'>
       <img
         className='fixed left-0 float-left ml-10 mt-10 hidden h-[450px] md:block'
-        src='/POS.png'
+        src='https://localhost:7160/Image/POS242838989.png'
         alt='image'
-        width={100}
-        height={100}
       />
       <div className='fixed right-0 flex h-screen w-full flex-col items-center justify-center rounded-bl-2xl rounded-tl-2xl bg-white shadow-md md:w-[500px] dark:bg-gray-900'>
         <div className='w-full max-w-md px-4 py-8 md:px-8 lg:px-16'>

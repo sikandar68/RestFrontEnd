@@ -388,7 +388,6 @@ const Users = () => {
   };
   return (
     <>
-    <NavBar />
       <Layout>
         <section className=' flex items-center justify-center'>
           <div className='container'>
@@ -643,7 +642,7 @@ const Users = () => {
                         <Input
                           type='file'
                           accept='image/*'
-                          className='text-secondary-foreground'
+                          className='text-secondary-foreground bg-light'
                           onChange={handleImageChange}
                         />
                         <Button

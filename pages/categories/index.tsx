@@ -24,10 +24,11 @@ import { useToast } from '@/components/ui/use-toast';
 import en from '@/locales/en';
 import ar from '@/locales/ar';
 import { useRouter } from 'next/router';
-import { Search, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import ConfirmationDialog from '@/components/alerts/ConfirmationDialog';
 import { PaginationSection } from '@/components/PaginationSection';
 import Layout from '@/components/Layout';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const Categories = () => {
   const router = useRouter();
@@ -226,8 +227,32 @@ const Categories = () => {
         </TableCell>
         <TableCell>{item.description}</TableCell>
         <TableCell>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 w-8 p-0'>
+            <span className='sr-only'>Open menu</span>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='bg-light' align='end'>
+            <DropdownMenuItem
+            className='hover:bg-accent hover:text-accent-foreground'
+            onClick={() => handleEdit(item.id.toString())}
+            >
+              <Pencil className='w-4 h-4 mx-2'/>
+              {t.edit}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+            onClick={() => handleDelete(item.id.toString())}
+             className='hover:bg-accent hover:text-accent-foreground'>
+            <Trash2 className='w-4 h-4 mx-2'/>
+              {t.delete}
+              </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
           {/* Edit button */}
-          <Button
+          {/* <Button
             onClick={() => handleEdit(item.id.toString())}
             variant='secondary'
             disabled={editPending}
@@ -240,32 +265,26 @@ const Categories = () => {
             className='ml-6'
           >
             {t.delete}
-          </Button>
+          </Button> */}
         </TableCell>
       </TableRow>
     ));
   };
   return (
     <>
-    <NavBar />
       <Layout>
-      
       <section className=' flex items-center justify-center'>
-        <div className='container'>
+        <div className='w-full mx-2 max-h-screen-minus-4rem'
+        style={{ maxHeight: 'calc(100vh - 4rem)' }}
+        >
           <div className='flex items-end justify-between gap-3'>
-            {/* <Input
-              className='h-12 w-full sm:max-w-[44%]'
-              placeholder='search'
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-            /> */}
             <div className='flex w-full items-center justify-between border-b-2 py-2'>
               <div>
                 <div className='text-primary-content text-xl'>{t.categories}</div>
               </div>
             </div>
           </div>
-          <div className='mt-2 flex items-center justify-between'>
+          <div className='mt-2 flex flex-col items-start justify-between overflow-x-auto sm:flex-row'>
             <label className='text-default-400 text-small flex items-center'>
               <span className='mx-2'>{t.show}</span>
               <select
@@ -281,14 +300,15 @@ const Categories = () => {
               </select>
               <span className='mx-2'>{t.entries}</span>
             </label>
-            <div className='flex gap-3'>
+            <div className='mx-2 mt-2 flex flex-row justify-start gap-2 overflow-x-auto'>
               <Button onClick={() => setModalOpen(true)} color='primary'>
                 {t.addNew}
               </Button>
-              <Button onClick={() => setFilterModalOpen(true)} color='primary'>
+              <Button className='hidden sm:flex' onClick={() => setFilterModalOpen(true)} color='primary'>
                 {t.applyFilters}
               </Button>
               <Button
+              className='hidden sm:flex'
                 onClick={() => {
                   setNameSearch('');
                   setDescriptionSearch('');
@@ -299,6 +319,7 @@ const Categories = () => {
               </Button>
             </div>
           </div>
+          <div>
           <Table>
             <TableHeader>
               <TableHeadRow>
@@ -367,6 +388,7 @@ const Categories = () => {
               </TableFooter>
             )}
           </Table>
+          </div>
           {/* Add Or Update Modal */}
           {isModalOpen && (
             <div className='fixed inset-0 flex items-center justify-center overflow-y-auto overflow-x-hidden'>

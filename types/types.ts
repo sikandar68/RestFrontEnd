@@ -64,6 +64,8 @@ export type ClientPreference = {
   theme: string;
   language: string;
   logo: string;
+  address: string;
+  phone: string;
 };
 export type OrderDetails = {
   totalPrice: number;
@@ -81,9 +83,10 @@ export type OrderData = {
   status: string;
   paymentType: string;
   deliveryType: string;
-  customer?: Customer;
-  items: OrderItem[];
+  customer: Customer;
+  orderDetails: OrderItem[];
   discount: number;
+  serviceCharges: number;
   note: string;
 };
 export type Customer = {
@@ -91,7 +94,11 @@ export type Customer = {
   name: string;
   localizedName: string;
   phone: string;
-  address: string;
+  homeNumber: string;
+  postCode: string;
+  street: string;
+  town: string;
+  email: string;
 };
 export type Coupon = {
   id: string;

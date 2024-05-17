@@ -74,8 +74,20 @@ const Order = () => {
     status: 'New',
     paymentType: 'Cash',
     deliveryType: 'waiting',
+    customer: {
+      id: 0,
+      name: '',
+      localizedName: '',
+      phone: '',
+      homeNumber: '',
+      postCode: '',
+      street: '',
+      town: '',
+      email: '',
+    },
     items: [],
     discount: 0,
+    serviceCharges : 0,
     note: '',
   });
   const [middleComponent, setMiddleComponent] = useState('');
@@ -407,6 +419,7 @@ const Order = () => {
           ...orderData,
           discount: discountAmount,
         });
+        setIsCouponPopupOpen(false);
       } else {
         setCouponError('Order amount is less then minimum order amount.');
       }
@@ -500,8 +513,20 @@ const Order = () => {
       status: 'New',
       paymentType: 'Cash',
       deliveryType: 'waiting',
+      customer: {
+        id: 0,
+        name: '',
+        localizedName: '',
+        phone: '',
+        homeNumber: '',
+        postCode: '',
+        street: '',
+        town: '',
+        email: '',
+      },
       items: [],
       discount: 0,
+      serviceCharges: 0,
       note: '',
     });
   };
@@ -588,18 +613,21 @@ const Order = () => {
                   {collection.map((item) => (
                     <div
                       key={item.id}
-                      className='my-1 flex min-w-32 flex-col items-center justify-center overflow-hidden rounded-lg border bg-cyan shadow-md'
+                      className='my-1 flex min-w-32 flex-col items-center justify-start overflow-hidden rounded-lg border bg-cyan shadow-md'
                       onClick={() =>
                         handleCollectionClick(item.id, item.type, item.name)
                       }
                     >
+                      <div className='h-10 w-full'>
                       <img
-                        src={item.pic}
+                        //src={item.pic}
+                        src= 'https://localhost:7160/Image/gril244047809.jpg'
                         alt={item.name}
-                        className='mt-1 h-8 w-8 object-cover'
+                        className='h-full w-full object-cover'
                       />
+                      </div>
                       <div className='p-1'>
-                        <h4 className='text-center font-bold text-white'>
+                        <h4 className='text-center text-sm font-bold text-white'>
                           {locale === 'en' ? item.name : item.localizedName}
                         </h4>
                       </div>

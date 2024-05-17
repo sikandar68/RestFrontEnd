@@ -1,6 +1,9 @@
 import { AdOnCategory, AdOnItem } from '@/types/types';
 import React, { useState } from 'react';
 import { Button } from './ui/button';
+import { useRouter } from 'next/router';
+import en from '@/locales/en';
+import ar from '@/locales/ar';
 
 interface AdOnPopupProps {
   adOnData: AdOnItem[];
@@ -17,6 +20,9 @@ const AdOnPopup: React.FC<AdOnPopupProps> = ({
   setIsAdOnPopupOpen,
   handleAdOnNextClick,
 }) => {
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'en' ? en : ar;
   const [selectedAdOns, setSelectedAdOns] = useState<AdOnItem[]>([]);
 
   const toggleAdOnSelection = (adOnId: number) => {
@@ -53,7 +59,7 @@ const AdOnPopup: React.FC<AdOnPopupProps> = ({
     <div className='customer-popup fixed inset-0 flex items-center justify-center'>
       <div className='fixed z-50 h-auto w-full max-w-2xl p-4 md:p-5 bg-white rounded-lg shadow-lg'>
         {/* Modal content */}
-        <div className='relative max-h-full w-full max-w-2xl p-4'>
+        <div className='relative max-h-full w-full max-w-2xl p-2'>
           {/* Modal header */}
           <div className='flex items-center gap-4 justify-between rounded-t p-2 md:p-3'>
             <div className='flex overflow-x-auto max-w-3xl space-x-4'>
@@ -85,13 +91,13 @@ const AdOnPopup: React.FC<AdOnPopupProps> = ({
             </button>
           </div>
           {/* Modal body */}
-          <div className='space-y-4 p-4 md:p-5'>
+          <div className='space-y-4'>
           <div className='container mx-auto mt-1'>
-        <div className='scrollbar-hide flex max-h-[210px] flex-wrap justify-center gap-2 gap-x-6 overflow-x-auto'>
+        <div className='scrollbar-hide flex max-h-[220px] flex-wrap justify-center gap-2 gap-x-6 overflow-x-auto'>
         {adOnData.map((item) => (
                 <div
                   key={item.id}
-                  className={`min-h-16 h-16 min-w-32 w-32 overflow-hidden border shadow-md ${
+                  className={`min-h-20 h-20 min-w-32 w-32 overflow-hidden border shadow-md ${
                     selectedAdOns.some((adOn) => adOn.id === item.id)
                       ? 'bg-cyan'
                       : 'bg-light'
@@ -99,7 +105,7 @@ const AdOnPopup: React.FC<AdOnPopupProps> = ({
                   onClick={() => toggleAdOnSelection(item.id)}
                 >
                   <div>
-                    <h4 className='text-center font-bold'>{item.name}</h4>
+                    <h4 className='text-center font-bold'>{locale === 'en' ? item.name : item.localizedName}</h4>
                     <h4 className='text-center font-bold'>{item.price}</h4>
                   </div>
                 </div>
@@ -107,15 +113,15 @@ const AdOnPopup: React.FC<AdOnPopupProps> = ({
         </div>
       </div>
             <div className='mt-4 flex justify-between'>
-              <Button onClick={() => setIsAdOnPopupOpen(false)}>Close</Button>
+              <Button onClick={() => setIsAdOnPopupOpen(false)}>{t.close}</Button>
               {selectedAdOns.length > 0 ? (
                 getLastSelectedAdOn()?.nextMoveId !== 0 ? (
-                  <Button onClick={handleNextButtonClick}>Next</Button>
+                  <Button onClick={handleNextButtonClick}>{t.next}</Button>
                 ) : (
-                  <Button onClick={handleSubmit}>Submit</Button>
+                  <Button onClick={handleSubmit}>{t.submit}</Button>
                 )
               ) : (
-                <Button disabled>Submit</Button>
+                <Button disabled>{t.submit}</Button>
               )}
             </div>
           </div>

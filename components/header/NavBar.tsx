@@ -41,7 +41,7 @@ const NavBar: React.FC = () => {
   const [userImage, setUserImage] = useState('');
   const [email, setEmail] = useState('');
   const [saId, setSaId] = useState('');
-
+  const [logo, setLogo] = useState('');
   const handleLogin = async () => {
     if (window.confirm('Are you sure to Loing from this user !') === true) {
       try {
@@ -155,7 +155,11 @@ const NavBar: React.FC = () => {
     setUserImage(userImage);
   };
   const cookies = parseCookies();
-
+  const getLogo = () => {
+    const clientPreferenceString = cookies.clientPreference || '{}';
+    const clientPreference: ClientPreference = JSON.parse(clientPreferenceString);
+    setLogo(clientPreference.logo);
+  };
   useEffect(() => {
     const userEmail = cookies.username;
     const saId = cookies.saId;
@@ -163,6 +167,7 @@ const NavBar: React.FC = () => {
     getUserImage();
     setEmail(userEmail);
     setSaId(saId);
+    getLogo();
     document.addEventListener('click', handleDocumentClick);
     return () => {
       document.removeEventListener('click', handleDocumentClick);
@@ -188,9 +193,9 @@ const NavBar: React.FC = () => {
           <div className='flex items-center justify-between'>
           {true ? (
               <img
-              className='hidden h-8 w-auto md:block lg:block'
-              //src={logo}
-              src='https://mavenx-test.s3.eu-north-1.amazonaws.com/default/1efb73cda2934e9b9d63fea237704b09.png'
+              className='hidden h-16 w-auto md:block lg:block'
+              src={logo}
+              //src='https://mavenx-test.s3.eu-north-1.amazonaws.com/default/1efb73cda2934e9b9d63fea237704b09.png'
               alt='Logo'
             />
             ):(
@@ -269,7 +274,7 @@ const NavBar: React.FC = () => {
           <div className='sm:ml-6 sm:flex sm:items-center'>
           <div className="hidden sm:block pr-5">
             <div className="flex w-[120px] justify-evenly items-center">
-            <Moon className='bg-light h-5 w-5'/>
+            <Sun className='bg-light h-5 w-5'/>
               <ToggleSwitch
                 onChange={()=>{
                   if(theme =='dark'){
@@ -282,7 +287,7 @@ const NavBar: React.FC = () => {
                 checked={theme == 'dark'}
                 className="scale-[1.15]"
               />
-              <Sun className='bg-light h-5 w-5'/>
+            <Moon className='bg-light h-5 w-5'/>
             </div>
           </div>
           <div className="hidden sm:block pr-5">

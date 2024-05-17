@@ -6,35 +6,45 @@ import {
   ClientPreference,
 } from '@/types/types';
 import { parseCookies } from 'nookies';
+import { calculateTotal } from '@/services/order';
+import { useRouter } from 'next/router';
+import en from '@/locales/en';
+import ar from '@/locales/ar';
 //import './Receipt.css'; // Import your stylesheet
 
 interface ReceiptProps {
-  orderData: OrderData;
+  orderData: any;
 }
 
-const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
+const ViewReceipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
   { orderData },
   ref
 ) => {
   const cookies = parseCookies();
-  const [logo, setLogo] = useState('');
+  const [clientPreference, setClientPreference] = useState<ClientPreference>({ id: 0, name: '', theme: '', language: '', logo: '', address: '', phone : '' });
+  const router = useRouter();
+  const { locale } = router;
+  const t = locale === 'en' ? en : ar;
+  
   useEffect(() => {
+    debugger;
     const clientPreferenceString = cookies.clientPreference || '{}';
     const clientPreference: ClientPreference = JSON.parse(
       clientPreferenceString
     );
-    setLogo(clientPreference.logo);
+    setClientPreference(clientPreference);
   }, []);
   return (
     <div
       ref={ref}
-      className=' mx-auto w-[300px] max-w-md border border-gray-300 bg-white p-4 shadow-md'
+      className='max-h-screen-minus-4rem mx-auto flex w-[300px] max-w-md flex-1 flex-col border border-light p-4 shadow-md shadow-light'
+      style={{ maxHeight: 'calc(100vh - 4rem)' }}
     >
       {/* Restaurant Logo */}
       <div className='flex justify-center'>
-        <div className='mb-4 flex w-28 items-center justify-center rounded-full'>
+        <div className='flex w-28 items-center justify-center rounded-full'>
           <img
-            src={logo}
+            src={clientPreference.logo}
             alt='Restaurant Logo'
             className='h-auto max-w-full rounded-full'
           />
@@ -52,23 +62,23 @@ const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
                   </h2>
                 </td>
                 <td>
-                  <p>Lebanita</p>
+                  <p>{clientPreference.name}</p>
                 </td>
               </tr>
               <tr className='flex'>
                 <td className='flex-1'>
-                  <p>Phone: {orderData.customer.phone}</p>
+                  <p>{t.phone}: {orderData.customer.phone}</p>
                 </td>
                 <td>
-                  <p>03004002525</p>
+                  <p>{clientPreference.phone}</p>
                 </td>
               </tr>
               <tr className='flex'>
                 <td className='flex-1'>
-                  <p>Address: {orderData.customer.street}</p>
+                  <p>{t.address}: {orderData.customer.street}</p>
                 </td>
-                <td>
-                  <p>Sunderland Uk</p>
+                <td className='w-32'>
+                  <p>{clientPreference.address}</p>
                 </td>
               </tr>
             </tbody>
@@ -78,7 +88,7 @@ const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
         <div className='flex'>
           <div className='flex-1'>
             <img
-              src={logo}
+              src={clientPreference.logo}
               alt='Image'
               className='h-20 w-20 max-w-full rounded-full'
             />
@@ -88,17 +98,17 @@ const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
               <tbody>
                 <tr>
                   <td>
-                    <p>Lebanita</p>
+                    <p>{clientPreference.name}</p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                    <p>03004002525</p>
+                    <p>{clientPreference.phone}</p>
                   </td>
                 </tr>
                 <tr>
                   <td>
-                    <p>Sunderland Uk</p>
+                    <p>{clientPreference.address}</p>
                   </td>
                 </tr>
               </tbody>
@@ -108,24 +118,22 @@ const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
       )}
 
       {/* Order Details */}
-      <div className='order-details mt-4'>
-        <h3 className='mb-2 text-lg font-bold'>Order Details</h3>
+      <div className='order-details mt-4 overflow-y-auto'>
+        <h3 className='mb-2 text-lg font-bold'>{t.orderDetails}</h3>
         <table className='mb-4 w-full'>
           <thead>
             <tr className='border-b'>
-              <th className='py-2'>Qty</th>
-              <th>Item</th>
-              <th className='py-2'>Price</th>
-              <th className='py-2'>Subtotal</th>
+              <th className='py-2'>{t.quantity}</th>
+              <th>{t.item}</th>
+              <th className='py-2'>{t.price}</th>
+              <th className='py-2'>{t.total}</th>
             </tr>
           </thead>
           <tbody>
-            {orderData.orderDetails?.map((item, index) => (
+            {orderData.orderDetails?.map((item: any, index: any) => (
               <tr key={index} className='border-b'>
                 <td className='py-2'>{item.quantity}</td>
-                <td>
-                  {item.itemName}
-                </td>
+                <td>{item.itemName}</td>
                 <td className='py-2'>${item.price.toFixed(2)}</td>
                 <td className='py-2'>
                   ${(item.quantity * item.price).toFixed(2)}
@@ -134,19 +142,15 @@ const Receipt: React.ForwardRefRenderFunction<any, ReceiptProps> = (
             ))}
           </tbody>
         </table>
-
-        {/* Total */}
-        <div className='total text-right text-lg font-bold'>
-          <h4>Total: ${calculateTotal(orderData.orderDetails)?.toFixed(2)}</h4>
-        </div>
+      </div>
+      {/* Total */}
+      <div className='total text-right text-lg font-bold'>
+        <h4>{t.total}: ${calculateTotal(orderData.orderDetails)?.toFixed(2)}</h4>
       </div>
     </div>
   );
 };
 
 // Helper function to calculate the total amount
-const calculateTotal = (items: OrderItem[]) => {
-  return items?.reduce((total, item) => total + item.quantity * item.price, 0);
-};
 
-export default React.forwardRef(Receipt);
+export default React.forwardRef(ViewReceipt);

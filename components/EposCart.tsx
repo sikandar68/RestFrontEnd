@@ -11,6 +11,11 @@ interface OrderSummaryProps {
   handleRemoveItemClick: (index: number) => void;
   handleSettleClick: () => void;
   handleCloseClick: () => void;
+  setIsCouponPopupOpen: (isOpen: boolean) => void;
+  setDiscountWindowOpen: (isOpen: boolean) => void;
+  setServiceChargesWindowOpen: (isOpen: boolean) => void;
+  handleEatInClick: () => void;
+  setNewItemPopupOpen: (isOpen: boolean) => void;
 }
 
 const EposCart: React.FC<OrderSummaryProps> = ({
@@ -19,6 +24,11 @@ const EposCart: React.FC<OrderSummaryProps> = ({
   handleRemoveItemClick,
   handleSettleClick,
   handleCloseClick,
+  setIsCouponPopupOpen,
+  setDiscountWindowOpen,
+  setServiceChargesWindowOpen,
+  handleEatInClick,
+  setNewItemPopupOpen
 }) => {
   const router = useRouter();
   const { locale } = router;
@@ -30,7 +40,7 @@ const EposCart: React.FC<OrderSummaryProps> = ({
   };
   return (
     <div>
-      <div className='flex h-[542px] w-[340px] flex-col justify-between bg-white'>
+      <div className='flex h-[542px] w-[360px] flex-col justify-between bg-white'>
         <div className='sm:rounded-lg'>
           <table className='w-full text-left text-sm text-gray-500 rtl:text-right'>
             <thead className='bg-white text-xs text-gray-900'>
@@ -46,8 +56,8 @@ const EposCart: React.FC<OrderSummaryProps> = ({
                 </td>
               </tr>
             </thead>
-            <tbody className='flex flex-col text-gray-900'>
-              {orderData.items.map((item, index) => (
+            <tbody className='flex max-h-[280px] flex-col overflow-y-auto text-gray-900'>
+              {orderData.orderDetails?.map((item, index) => (
                 <>
                   <tr
                     className='mt-1 flex cursor-pointer flex-row gap-x-4 bg-[#00b5fa]'
@@ -60,16 +70,18 @@ const EposCart: React.FC<OrderSummaryProps> = ({
                           onClick={() =>
                             handleQuantityChange(index, item.quantity - 1)
                           }
-                          className='bg-gray-200 px-2 py-1 text-gray-700'
+                          className='w-6 bg-gray-200 px-2 py-1 text-gray-700'
                         >
                           -
                         </button>
-                        {item.quantity}
+                        <div className='flex min-w-4 justify-center bg-white'>
+                          {item.quantity}
+                        </div>
                         <button
                           onClick={() =>
                             handleQuantityChange(index, item.quantity + 1)
                           }
-                          className='bg-gray-200 px-2 py-1 text-gray-700'
+                          className='w-6 bg-gray-200 px-2 py-1 text-gray-700'
                         >
                           +
                         </button>
@@ -126,8 +138,7 @@ const EposCart: React.FC<OrderSummaryProps> = ({
                 <div className='w-16 px-6 py-1 text-sm'>{t.total}:</div>
                 <div className='mr-5 px-6 py-2'>
                   {/* Total Amount Calculation */}
-                  {orderData.items
-                    .reduce(
+                  {orderData.orderDetails?.reduce(
                       (total, item) =>
                         total +
                         (item.price + // Item price
@@ -141,51 +152,83 @@ const EposCart: React.FC<OrderSummaryProps> = ({
                     .toFixed(2)}
                 </div>
                 <div className='w-16 px-6 py-1 text-sm'>{t.discount}:</div>
-                <div className='mr-5 px-6 py-2'>0</div>
+                <div className='mr-5 px-6 py-2'>
+                  {orderData.discount.toFixed(2)}
+                </div>
               </div>
               <div className='flex items-end gap-2 space-x-2 font-semibold'>
-                <div className='w-16 px-6 py-1 text-sm'>{t.serviceCharges}:</div>
-                <div className='mr-5 px-6 py-2'>0</div>
+                <div className='w-16 px-6 py-1 text-sm'>
+                  {t.serviceCharges}:
+                </div>
+                <div className='mr-5 px-6 py-2'>
+                  {orderData.serviceCharges.toFixed(2)}
+                </div>
               </div>
-              <div className='flex items-end gap-36 space-x-2 font-semibold'>
-                
-              </div>
+              <div className='flex items-end gap-36 space-x-2 font-semibold'></div>
             </div>
 
-            <div className='flex items-center justify-center gap-1 px-2'>
-              <button className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'>
+            <div className='flex flex-wrap items-center justify-start gap-1 px-2'>
+              <button
+                onClick={() => setDiscountWindowOpen(true)}
+                className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'
+              >
                 <div className='flex flex-col items-center'>
                   <BadgePercent />
                   {t.discount}
                 </div>
               </button>
-              <button className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'>
+              <button
+                onClick={() => setIsCouponPopupOpen(true)}
+                className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'
+              >
                 <div className='flex flex-col items-center'>
                   <Puzzle />
                   {t.coupon}
                 </div>
               </button>
-              <button className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'>
+              <button
+                onClick={() => setServiceChargesWindowOpen(true)}
+                className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'
+              >
                 <div className='flex flex-col items-center'>
                   <BadgePercent />
                   {t.serviceCharges}
                 </div>
               </button>
-              <button className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'>
+              <button
+                onClick={handleEatInClick}
+                className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'
+              >
                 <div className='flex flex-col items-center'>
                   <BadgePercent />
                   {t.eatIn}
                 </div>
               </button>
+              <button
+                    onClick={() => setNewItemPopupOpen(true)}
+                    className='flex h-10 w-20 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-light p-6 text-black'
+                  >
+                    <div className='flex flex-col items-center'>
+                      <BadgePercent />
+                      New
+                    </div>
+                  </button>
             </div>
-            <div className='flex items-center justify-center gap-4 m-2 px-2'>
-              <button onClick={handleCloseClick} className='flex h-6 w-30 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-destructive p-6 text-black'>
-                <div className='flex flex-col text-xl items-center'>
+
+            <div className='m-2 flex items-center justify-center gap-4 px-2'>
+              <button
+                onClick={handleCloseClick}
+                className='w-30 flex h-6 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-destructive p-6 text-black'
+              >
+                <div className='flex flex-col items-center text-xl'>
                   {t.delete}
                 </div>
               </button>
-              <button onClick={handleSettleClick} className='flex h-6 w-30 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-[#758f47] p-6 text-black'>
-                <div className='flex flex-col text-xl items-center'>
+              <button
+                onClick={handleSettleClick}
+                className='w-30 flex h-6 items-center justify-center gap-1 rounded-md border border-[#a1a1a1] bg-[#758f47] p-6 text-black'
+              >
+                <div className='flex flex-col items-center text-xl'>
                   {t.proceed}
                 </div>
               </button>

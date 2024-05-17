@@ -45,7 +45,6 @@ export default function Home() {
   
   return (
     <>
-      <NavBar />
       <Layout>
       <section className=' flex items-center justify-center'>
         <div>

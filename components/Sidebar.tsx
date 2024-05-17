@@ -54,7 +54,7 @@ const Sidebar: FC = () => {
     getLogo();
   }, []);
   const wrapperClasses = classNames(
-    'h-screen overflow-auto px-2 pt-8 pb-4 bg-light flex justify-between flex-col shadow-lg',
+    'overflow-auto px-2 pt-8 bg-light flex justify-between flex-col shadow-lg',
     {
       ['w-56 min-w-56']: !toggleCollapse,
       ['w-16 min-w-16']: toggleCollapse,
